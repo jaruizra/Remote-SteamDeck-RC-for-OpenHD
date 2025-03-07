@@ -9,6 +9,9 @@ def print_remove(joy):
 def key_received(key):
     print('Key:', key)
 
+    if key.keytype == Key.KeyTypes.BUTTON:
+         print(key)
+
     # pruebo con la supuesta tecla A
     if key.number == 0:
         print("Pulsada tecla A")
