@@ -11,7 +11,7 @@ if joysticks:
     # For example, use the first joystick
     joystick = joysticks[0]
     joystick.init()  # Ensure the joystick is initialized
-    print("Joystick instance ID:", joystick.get_instance_id())
+    print("Joystick instance ID:", joystick.get_instance_id(), joystick.get_name(), get_numaxes())
 
     # el nombre
     print("Joystick instance ID:", joystick.get_name())
