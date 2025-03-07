@@ -1,12 +1,11 @@
-from inputs import devices, get_gamepad
+from inputs import devices
 
-# List available gamepads/joysticks
 for device in devices.gamepads:
     print("Device Name:", device.name)
+    # Try accessing an attribute named 'path' (if it exists)
+    device_path = getattr(device, 'path', None)
+    if device_path is not None:
+        print("Device Path:", device_path)
+    else:
+        print("Device Path attribute not available.")
     print("Capabilities:", device.capabilities())
-
-# Read events in a loop
-while True:
-    events = get_gamepad()  # Waits until events are available
-    for event in events:
-        print(f"Type: {event.ev_type}, Code: {event.code}, State: {event.state}")
