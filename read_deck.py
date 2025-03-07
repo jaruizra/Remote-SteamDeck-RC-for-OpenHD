@@ -3,7 +3,6 @@ from inputs import devices, get_gamepad
 # List available gamepads/joysticks
 for device in devices.gamepads:
     print("Device Name:", device.name)
-    print("Device Path:", device.fn)
     print("Capabilities:", device.capabilities())
 
 # Read events in a loop
