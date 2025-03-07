@@ -1,7 +1,7 @@
 import pygame
 
-# lo inicializo
-pygame.init()
 
-# imprimo si hay controladores
-print(pygame.joystick.get_count())
+pygame.joystick.init()
+joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
+
+print(joysticks)
