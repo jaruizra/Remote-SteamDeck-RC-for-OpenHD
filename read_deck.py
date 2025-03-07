@@ -12,5 +12,9 @@ if joysticks:
     joystick = joysticks[0]
     joystick.init()  # Ensure the joystick is initialized
     print("Joystick instance ID:", joystick.get_instance_id())
+
+    # el nombre
+    print("Joystick instance ID:", joystick.get_name())
+
 else:
     print("No joysticks found.")
