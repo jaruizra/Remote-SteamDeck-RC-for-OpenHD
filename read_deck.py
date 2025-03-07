@@ -8,6 +8,11 @@ def print_remove(joy):
 
 def key_received(key):
     print('Key:', key)
+
+    # pruebo con la supuesta tecla A
+    if key.number == 0:
+        print("Pulsada tecla A")
+
     if key.keytype == Key.BUTTON and key.number == 0:
         if key.value == 1:
             # Button 0 pressed
