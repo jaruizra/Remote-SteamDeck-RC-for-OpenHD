@@ -1,9 +1,7 @@
-from inputs import get_gamepad
+from inputs import devices
 
-while True:
-    print("1")
-    events = get_gamepad()  # Blocks until an event is available
-    print("1")
-    for event in events:
-        print("1")
-        print(f"Type: {event.ev_type}, Code: {event.code}, State: {event.state}")
+for device in devices.gamepads:
+    print("Device Name:", device.name)
+    print("Device Path:", device.fn)
+    print("Capabilities:", device.capabilities())
+
