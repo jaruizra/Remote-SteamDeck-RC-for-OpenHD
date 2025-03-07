@@ -51,7 +51,7 @@ def main():
                 running = False
 
         # Pequeño retardo para no saturar la CPU
-        sdl2.SDL_Delay(10)
+        sdl2.SDL_Delay(10000)
 
     # Cierra el joystick y finaliza SDL2
     sdl2.SDL_JoystickClose(joystick)
