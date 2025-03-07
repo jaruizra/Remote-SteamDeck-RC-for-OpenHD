@@ -42,7 +42,7 @@ def main():
         # Procesa todos los eventos pendientes
         while sdl2.SDL_PollEvent(event) != 0:
             if event.type == sdl2.SDL_JOYAXISMOTION:
-                print("Eje", event.jaxis.axis, "movido a", event.jaxis.value)
+                #print("Eje", event.jaxis.axis, "movido a", event.jaxis.value)
             elif event.type == sdl2.SDL_JOYBUTTONDOWN:
                 print("Botón", event.jbutton.button, "presionado")
             elif event.type == sdl2.SDL_JOYBUTTONUP:
