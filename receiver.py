@@ -1,39 +1,33 @@
 #!/usr/bin/python3
+import sys
 import socket
 
+UDP_IP = "0.0.0.0"  # Listen on all interfaces
+UDP_PORT = 5005
+BUFFER_SIZE = 1024
+
+def init_udp_socket():
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        sock.bind((UDP_IP, UDP_PORT))
+    except Exception as e:
+        print("Error binding UDP socket:", e)
+        sys.exit(1)
+    return sock
+
 def main():
-    # Configuración del servidor: escucha en todas las interfaces en el puerto 5005.
-    TCP_IP = "100.110.183.73"
-    TCP_PORT = 5005
-    BUFFER_SIZE = 1024  # Tamaño del buffer para recibir datos
-
-    # Crear socket TCP
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((TCP_IP, TCP_PORT))
-    server_socket.listen(1)  # Escucha 1 conexión entrante
-    print(f"Servidor escuchando en {TCP_IP}:{TCP_PORT}...")
-
-    # Aceptar una conexión entrante
-    conn, addr = server_socket.accept()
-    print("Conexión recibida de:", addr)
-
+    sock = init_udp_socket()
+    print(f"Listening on UDP port {UDP_PORT}...")
+    
     try:
         while True:
-            # Recibir datos
-            data = conn.recv(BUFFER_SIZE)
-            if not data:
-                # Se cierra la conexión si no hay más datos
-                print("Conexión cerrada por el cliente.")
-                break
-
-            # Decodificar y procesar el mensaje recibido
-            message = data.decode("utf-8")
-            print("Mensaje recibido:", message)
+            data, addr = sock.recvfrom(BUFFER_SIZE)
+            message = data.decode('utf-8')
+            print(f"Received from {addr}: {message}")
     except KeyboardInterrupt:
-        print("Interrupción por teclado. Cerrando servidor...")
+        print("Exiting receiver...")
     finally:
-        conn.close()
-        server_socket.close()
+        sock.close()
 
 if __name__ == "__main__":
     main()

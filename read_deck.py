@@ -1,101 +1,86 @@
 #!/usr/bin/python3
 
+# librerias
 import sys
-import sdl2
-import sdl2.ext
 import socket
+import json
+import sdl2 # para lectura de joystick en linux
+import sdl2.ext
+import time
 
-# Configuración del servidor TCP
-TCP_IP = "100.77.204.87"  # Cambia esta IP por la de tu servidor
-TCP_PORT = 5005           # Cambia el puerto según necesites
+# Receiver IP
+UDP_IP = "0.0.0.0"
+UDP_PORT = 5005
+REFRESH_RATE_MS = 16  # 60Hz frecuencia aprox
 
-def main():
-    # Conexión al servidor TCP
-    try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect((TCP_IP, TCP_PORT))
-        print("Conectado a", TCP_IP, "en el puerto", TCP_PORT)
-    except Exception as e:
-        print("Error al conectar al servidor:", e)
-        return 1
+def init_udp_socket():
+    # Create a UDP socket
+    return socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    # Inicializa SDL2 para el joystick
+def init_joystick():
     if sdl2.SDL_Init(sdl2.SDL_INIT_JOYSTICK) < 0:
-        print("No se pudo inicializar SDL:", sdl2.SDL_GetError().decode())
-        return 1
-
-    # Verifica que haya al menos un joystick conectado
-    num_joysticks = sdl2.SDL_NumJoysticks()
-    if num_joysticks < 1:
-        print("No se encontró ningún joystick conectado.")
+        print("SDL Init error:", sdl2.SDL_GetError().decode())
+        sys.exit(1)
+    if sdl2.SDL_NumJoysticks() < 1:
+        print("No joystick found.")
         sdl2.SDL_Quit()
-        return 1
-
-    # Abre el primer joystick (índice 0)
+        sys.exit(1)
     joystick = sdl2.SDL_JoystickOpen(0)
     if not joystick:
-        print("No se pudo abrir el joystick:", sdl2.SDL_GetError().decode())
+        print("Failed to open joystick:", sdl2.SDL_GetError().decode())
         sdl2.SDL_Quit()
-        return 1
+        sys.exit(1)
+    return joystick
 
-    # Imprime información básica del joystick
-    joystick_name = sdl2.SDL_JoystickName(joystick)
-    joystick_name = joystick_name.decode("utf-8") if joystick_name else "Desconocido"
-    print("Joystick:", joystick_name)
-    print("Número de ejes:", sdl2.SDL_JoystickNumAxes(joystick))
-    print("Número de botones:", sdl2.SDL_JoystickNumButtons(joystick))
-    print("Número de hats:", sdl2.SDL_JoystickNumHats(joystick))
+def read_joystick_state(event, axis_values, button_values):
+    # Process all pending SDL events
+    while sdl2.SDL_PollEvent(event) != 0:
+        if event.type == sdl2.SDL_JOYAXISMOTION:
+            # Update axis value if axis is 0, 1, 2, or 3
+            if event.jaxis.axis in axis_values:
+                axis_values[event.jaxis.axis] = event.jaxis.value
+                # Uncomment for debugging:
+                # print(f"Axis {event.jaxis.axis} updated: {event.jaxis.value}")
+        elif event.type in (sdl2.SDL_JOYBUTTONDOWN, sdl2.SDL_JOYBUTTONUP):
+            # For buttons 11, 12, 13, 14, update state: 1 for down, 0 for up
+            if event.jbutton.button in (11, 12, 13, 14):
+                button_values[event.jbutton.button] = 1 if event.type == sdl2.SDL_JOYBUTTONDOWN else 0
+                # Uncomment for debugging:
+                # print(f"Button {event.jbutton.button} state: {button_values[event.jbutton.button]}")
+        elif event.type == sdl2.SDL_QUIT:
+            sys.exit(0)
 
-    # Habilita la recepción de eventos para procesar, por ejemplo, el cierre de la ventana
+def send_state(sock, ip, port, axis_values, button_values):
+    # Prepare a JSON message with the state of axes and buttons
+    data = {
+        "axes": [axis_values.get(i, 0) for i in range(4)],
+        "buttons": [button_values.get(i, 0) for i in (11, 12, 13, 14)]
+    }
+    message = json.dumps(data)
+    sock.sendto(message.encode(), (ip, port))
+
+def main():
+    sock = init_udp_socket()
+    joystick = init_joystick()
+    # Enable joystick events
     sdl2.SDL_JoystickEventState(sdl2.SDL_ENABLE)
-    
-    running = True
     event = sdl2.SDL_Event()
 
+    # Dictionaries to hold state for axes and buttons
+    axis_values = {0: 0, 1: 0, 2: 0, 3: 0}
+    button_values = {11: 0, 12: 0, 13: 0, 14: 0}
+
     try:
-        while running:
-            # Procesar eventos (esto es opcional, pero permite detectar SDL_QUIT)
-            while sdl2.SDL_PollEvent(event) != 0:
-                if event.type == sdl2.SDL_QUIT:
-                    running = False
-
-            # Realiza el polling de los valores del joystick a 60Hz
-            # Leer valores de los ejes 0, 1, 2 y 3
-            axis0 = sdl2.SDL_JoystickGetAxis(joystick, 0)
-            axis1 = sdl2.SDL_JoystickGetAxis(joystick, 1)
-            axis2 = sdl2.SDL_JoystickGetAxis(joystick, 2)
-            axis3 = sdl2.SDL_JoystickGetAxis(joystick, 3)
-            # Leer estados de los botones 11, 12, 13 y 14
-            button11 = sdl2.SDL_JoystickGetButton(joystick, 11)
-            button12 = sdl2.SDL_JoystickGetButton(joystick, 12)
-            button13 = sdl2.SDL_JoystickGetButton(joystick, 13)
-            button14 = sdl2.SDL_JoystickGetButton(joystick, 14)
-
-            # Construir un string con todos los valores
-            # Puedes cambiar el formato del mensaje según tus necesidades
-            message = (
-                f"A0:{axis0};A1:{axis1};A2:{axis2};A3:{axis3};"
-                f"B11:{button11};B12:{button12};B13:{button13};B14:{button14}"
-            )
-            # Enviar el mensaje por el socket TCP
-            try:
-                sock.send(message.encode())
-            except Exception as e:
-                print("Error al enviar datos:", e)
-
-            # Opcional: imprimir el mensaje para depuración
-            # print(message)
-
-            # Retardo para aproximar 60Hz (1000ms/60 ≈ 16.67ms)
-            sdl2.SDL_Delay(16)
+        while True:
+            read_joystick_state(event, axis_values, button_values)
+            send_state(sock, UDP_IP, UDP_PORT, axis_values, button_values)
+            sdl2.SDL_Delay(REFRESH_RATE_MS)
     except KeyboardInterrupt:
-        print("Interrupción por teclado. Saliendo...")
-
-    # Cerrar recursos
-    sdl2.SDL_JoystickClose(joystick)
-    sdl2.SDL_Quit()
-    sock.close()
-    return 0
+        print("Exiting transmitter...")
+    finally:
+        sdl2.SDL_JoystickClose(joystick)
+        sdl2.SDL_Quit()
+        sock.close()
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
