@@ -24,6 +24,15 @@ def init_udp_socket():
     # return the socket conexion
     return sock
 
+def manage_data(sock):
+    # receive data from socket
+    data, addr = sock.recvfrom(BUFFER_SIZE)
+
+    # decode data from bytes to utf-8
+    message = data.decode('utf-8')
+    # print receive data
+    print(message)
+
 def main():
     # Create the udp socket
     sock = init_udp_socket()
@@ -33,13 +42,8 @@ def main():
     try:
         # bucle
         while True:
-            # receive data from socket
-            data, addr = sock.recvfrom(BUFFER_SIZE)
-            # decode data from bytes to utf-8
-            message = data.decode('utf-8')
-            # print receive data
-            print(f"Received from {addr}: {message}")
-
+            manage_data(sock)
+            
     # close conexion at the end 
     except KeyboardInterrupt:
         print("Exiting receiver...")
