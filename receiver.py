@@ -30,8 +30,10 @@ def manage_data(sock):
 
     # decode data from bytes to utf-8
     message = data.decode('utf-8')
+
     # print receive data
     print(message)
+    
 
 def main():
     # Create the udp socket

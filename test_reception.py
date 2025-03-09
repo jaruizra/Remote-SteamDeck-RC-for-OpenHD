@@ -43,6 +43,7 @@ def main():
 
     try:
         while True:
+            
             # Update joystick state
             sdl2.SDL_PumpEvents()
 
