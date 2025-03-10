@@ -4,7 +4,7 @@ import socket
 import uinput   # create the controller 
 import json
 
-UDP_IP = "100.110.183.73"  # Listen on all interfaces
+UDP_IP = "0.0.0.0"  # Listen on all interfaces
 UDP_PORT = 5005
 BUFFER_SIZE = 1024
 

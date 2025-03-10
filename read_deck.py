@@ -9,7 +9,7 @@ import sdl2.ext
 import time
 
 # Receiver IP
-UDP_IP = "100.121.21.44"
+UDP_IP = "0.0.0.0"
 UDP_PORT = 5005
 REFRESH_RATE_MS = 16  # 60Hz frecuencia aprox
 
