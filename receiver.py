@@ -4,7 +4,8 @@ import socket
 import uinput   # create the controller 
 import json
 
-UDP_IP = "0.0.0.0"  # Listen on all interfaces
+# IP of the receiver tailscale ip
+UDP_IP = "100.121.21.44"  # Listen to tailscale interface
 UDP_PORT = 5005
 BUFFER_SIZE = 1024
 
@@ -32,10 +33,10 @@ def create_virtual_joystick():
     Axes range: 0 to 32767
     """
     axis_capabilities = (
-        uinput.ABS_X + (0, 32767, 0, 0),
-        uinput.ABS_Y + (0, 32767, 0, 0),
-        uinput.ABS_Z + (0, 32767, 0, 0),
-        uinput.ABS_RZ + (0, 32767, 0, 0),
+        uinput.ABS_X + (-32767, 32767, 0, 0),
+        uinput.ABS_Y + (-32767, 32767, 0, 0),
+        uinput.ABS_Z + (-32767, 32767, 0, 0),
+        uinput.ABS_RZ + (-32767, 32767, 0, 0),
     )
     button_capabilities = (
         uinput.BTN_A,
