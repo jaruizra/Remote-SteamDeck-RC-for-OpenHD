@@ -9,7 +9,7 @@ import sdl2.ext
 import time
 
 # Receiver IP
-UDP_IP = "0.0.0.0"
+UDP_IP = "100.121.21.44"
 UDP_PORT = 5005
 REFRESH_RATE_MS = 16  # 60Hz frecuencia aprox
 
@@ -69,7 +69,7 @@ def read_joystick_state(event, axis_values, button_values):
 def send_state(sock, ip, port, axis_values, button_values):
     # Prepare a JSON message with the state of axes and buttons
     data = {
-        "axes": axis_values,
+        "axis": axis_values,
         "buttons": button_values
     }
     # create the message to share in a json string

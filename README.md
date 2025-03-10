@@ -74,3 +74,65 @@ The final implementation uses SDL2 (via PySDL2) to capture joystick inputs, comb
 Contributions are welcome! Fork the repository and submit pull requests with detailed descriptions of your changes.
 
 Or suggest improvements in the issues tab
+
+
+
+
+# Notes for Raspbery pi on OpenHD Image
+
+## 1. Install Required Packages
+
+Install Git and Python Pip:
+
+```bash
+sudo apt install git python3-pip
+```
+
+## 2. Clone the Project Repository
+
+Clone your project repository (replace <repository-url> with your repository's URL):
+
+```bash
+git clone <repository-url>
+cd <repository-directory>
+```
+
+## 3. Install Python Dependencies
+
+Install the python-uinput package:
+
+```bash
+sudo pip3 install python-uinput
+```
+
+## 4. Verify uinput Module Availability
+
+Check if the uinput module is loaded:
+
+```bash
+lsmod | grep uinput
+```
+
+- If you see no output: The module is not loaded; proceed to the next step.
+
+## 5. Load the uinput Module Manually
+
+Enable the module manually:
+
+```bash
+sudo modprobe uinput
+```
+
+Then, verify again:
+
+lsmod | grep uinput
+
+- If there is still no output: Additional steps may be required (e.g., verifying your kernel configuration or setting up udev rules).
+
+## 6. Run the Program
+
+Finally, execute thr program:
+
+```bash
+sudo ./program.py
+```
