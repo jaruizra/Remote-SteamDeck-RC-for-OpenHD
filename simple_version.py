@@ -99,6 +99,7 @@ def display_dashboard(buttons, axes, is_first_run=False):
         print(f'\033[{num_lines}F', end='', flush=True)
 
     print("--- SIMPLE JOYSTICK DASHBOARD --- (Press Ctrl+C to quit)")
+    print()
 
     # Display Button States
     print('--- BUTTONS ---')
@@ -127,8 +128,8 @@ def main():
         sdl2.SDL_JoystickEventState(sdl2.SDL_ENABLE)
 
         # Dictionaries to hold state for axes and buttons
-        axis_values = {i: 0 for i in range(NUM_BUTTONS)}
-        button_values = {i: 0 for i in range(NUM_AXES)}
+        axis_values = {i: 0 for i in range(NUM_AXES)}
+        button_values = {i: 0 for i in range(NUM_BUTTONS)}
 
         # Print the initial layout once to prevent cursor errors
         display_dashboard(button_values, axis_values, is_first_run=True)
