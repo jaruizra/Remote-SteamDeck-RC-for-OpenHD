@@ -20,7 +20,9 @@ from rich.panel import Panel
 # Note: These are common values for a Steam Deck. Adjust for your controller.
 JOYSTICK_INDEX = 0          # The joystick to use (0 is the first one found)
 NUM_AXES_TO_TRACK = 6       # Number of axes to monitor (Steam Deck has 6)
-NUM_BUTTONS_TO_TRACK = 19   # Number of buttons to monitor (Steam Deck has 17)
+NUM_BUTTONS_TO_TRACK = 20   # Number of buttons to monitor (covers back buttons)
+REFRESH_RATE_HZ = 60        # Target refresh rate for the display
+REFRESH_DELAY_SEC = 1 / REFRESH_RATE_HZ # Calculate delay in seconds
 
 class Joystick:
     """A class to manage and read data from an SDL2 joystick."""
@@ -83,60 +85,159 @@ class Joystick:
 
     # --- Getter Methods for Developers ---
 
-    def get_dpad_state(self):
+    @property
+    def dpad_state(self):
         """
-        Returns the state of the D-Pad, mapped from specific buttons.
-        Note: Many controllers report the D-Pad as a 'hat', not buttons.
-        This function uses the button numbers you requested.
-        Order: Up (11), Down (12), Left (13), Right (14)
-        """
-        dpad_buttons = [11, 12, 13, 14]
-        return {f"button_{b}": self.button_values.get(b, 0) for b in dpad_buttons}
+        Returns the state of the D-Pad as a dictionary.
 
-    def get_face_button_state(self):
-        """Returns the state of the four primary face buttons (A,B,X,Y)."""
-        face_buttons = [0, 1, 2, 3]
-        return {f"button_{b}": self.button_values.get(b, 0) for b in face_buttons}
+        Note:
+            On the Steam Deck, the D-Pad registers as individual buttons.
+            This method maps buttons 11, 12, 13, and 14 to D-Pad directions.
 
-    def get_shoulder_state(self):
+        Returns:
+            dict: The state of the D-Pad. Example:
+                ```
+                {
+                    "Up (11)": 0,
+                    "Down (12)": 1,
+                    "Left (13)": 0,
+                    "Right (14)": 0
+                }
+                ```
         """
-        Returns the state of shoulder triggers (axes) and bumpers (buttons).
-        Uses the specific axes and buttons you requested.
-        """
-        return {
-            "L2_trigger_axis_4": self.axis_values.get(4, 0),
-            "R2_trigger_axis_5": self.axis_values.get(5, 0),
-            "bumper_button_9": self.button_values.get(9, 0), # Note: Often L1/R1 are 4/5
-            "bumper_button_10": self.button_values.get(10, 0)
+        dpad_dict = {
+            "11": self.button_values.get(11, 0),
+            "12": self.button_values.get(12, 0),
+            "13": self.button_values.get(13, 0),
+            "14": self.button_values.get(14, 0),
         }
+        return dpad_dict
 
-    def get_joystick_movement_state(self):
-        """Returns the state of the left and right joystick axes."""
-        joy_axes = [0, 1, 2, 3] # LX, LY, RX, RY
-        return {f"axis_{a}": self.axis_values.get(a, 0) for a in joy_axes}
-
-    def get_joystick_full_state(self):
+    @property
+    def face_buttons(self):
         """
-        Returns the joystick axes plus their click-buttons.
-        Uses the specific buttons you requested.
+        Returns the state of the four primary face buttons (A, B, X, Y).
+
+        Returns:
+            dict: The state of the face buttons. Example:
+                ```
+                {
+                    "A (0)": 1,
+                    "B (1)": 0,
+                    "X (2)": 0,
+                    "Y (3)": 0
+                }
+                ```
         """
-        state = self.get_joystick_movement_state()
-        # Note:L3/R3 (stick clicks) are buttons 9/10
-        state["L3"] = self.button_values.get(7, 0)
-        state["R3"] = self.button_values.get(8, 0)
-        return state
+        face_buttons_dict = {
+            "0": self.button_values.get(0, 0),
+            "1": self.button_values.get(1, 0),
+            "2": self.button_values.get(2, 0),
+            "3": self.button_values.get(3, 0),
+        }
+        return face_buttons_dict
 
-    def get_back_button_state(self):
-        """Returns the state of the back grip buttons."""
-        back_buttons = [16, 17, 18, 19]
-        return {f"button_{b}": self.button_values.get(b, 0) for b in back_buttons}
+    @property
+    def shoulder_state(self):
+        """
+        Returns the state of the shoulder bumpers (L1/R1) and triggers (L2/R2).
 
-    def get_full_state(self):
-        """Returns a copy of all tracked button and axis states."""
-        return {
+        Returns:
+            dict: A dictionary containing the state of the shoulder controls.
+                  The bumpers are buttons, and the triggers are analog axes.
+                  Example:
+                  ```
+                  {
+                      "L1 (9)": 1,
+                      "R1 (10)": 0,
+                      "L2 Axis (4)": -32768,
+                      "R2 Axis (5)": 21530
+                  }
+                  ```
+        """
+        shoulder_dict {
+            "9": self.button_values.get(9, 0),
+            "10": self.button_values.get(10, 0),
+            "4": self.axis_values.get(4, 0),
+            "5": self.axis_values.get(5, 0),
+        }
+        return shoulder_dict
+
+    @property
+    def joystick_state(self):
+        """
+        Returns the state of both joysticks, including their axes and click-buttons.
+
+        Returns:
+            dict: A dictionary containing the state of the joysticks.
+                  Example:
+                  ```
+                  {
+                      "L-Stick X (0)": 12040,
+                      "L-Stick Y (1)": -256,
+                      "R-Stick X (2)": -32768,
+                      "R-Stick Y (3)": 32767,
+                      "L3 Click (7)": 0,
+                      "R3 Click (8)": 1
+                  }
+                  ```
+        """
+        joystick_dict {
+            "0": self.axis_values.get(0, 0),
+            "1": self.axis_values.get(1, 0),
+            "2": self.axis_values.get(2, 0),
+            "3": self.axis_values.get(3, 0),
+            "7": self.button_values.get(7, 0),
+            "8": self.button_values.get(8, 0),
+        }
+        return joystick_dict
+
+    @property
+    def back_buttons(self):
+       """
+        Returns the state of the back grip buttons (L4, R4, L5, R5).
+
+        Returns:
+            dict: A dictionary containing the state of the back buttons.
+                  Example:
+                  ```
+                  {
+                      "L4 (17)": 0,
+                      "R4 (16)": 1,
+                      "L5 (19)": 0,
+                      "R5 (18)": 0
+                  }
+                  ```
+        """
+        back_buttons_dict {
+            "L4 (17)": self.button_values.get(17, 0),
+            "R4 (16)": self.button_values.get(16, 0),
+            "L5 (19)": self.button_values.get(19, 0),
+            "R5 (18)": self.button_values.get(18, 0),
+        }
+        return back_buttons_dict
+
+    @property
+    def full_state(self):
+        """
+        Returns a complete snapshot of all tracked axes and buttons.
+
+        Returns:
+            dict: A dictionary containing two keys, 'axes' and 'buttons',
+                  whose values are dictionaries of the raw states.
+                  Example:
+                  ```
+                  {
+                      "axes": {0: -256, 1: 12040, ...},
+                      "buttons": {0: 1, 1: 0, ...}
+                  }
+                  ```
+        """
+        full_state_dict {
             "axes": self.axis_values.copy(),
             "buttons": self.button_values.copy()
         }
+        return full_state_dict
 
     def close(self):
         """Closes the joystick and quits SDL."""
@@ -146,28 +247,35 @@ class Joystick:
         sdl2.SDL_Quit()
         print("Joystick closed and SDL resources released.")
 
-def display_developer_dashboard(buttons, axes):
+def generate_dashboard_layout(joystick):
     """
-    Render one frame of the joystick dashboard, overwriting the previous one
+    Generates a rich layout object to be displayed by Live.
+    This function NO LONGER prints to the screen. It just builds the layout.
     """
+    def create_table(data_dict, title):
+        table = Table(title=title, expand=True, show_header=False, border_style="dim")
+        table.add_column("Item", style="cyan", no_wrap=True)
+        table.add_column("Value", justify="right")
+        for item, value in data_dict.items():
+            if isinstance(value, int) and value in (0, 1):
+                state = "[bold green]Pressed[/]" if value else "[red]Off[/]"
+                table.add_row(item, state)
+            else:
+                color = "green" if value > 1000 else "red" if value < -1000 else "white"
+                table.add_row(item, f"[{color}]{value:+6d}[/]")
+        return Panel(table, title=f"[bold cyan]{title}[/]", border_style="cyan")
 
-    # clear the whole terminal
-    os.system('clear' if os.name != 'nt' else 'cls')
-
-    print("--- SIMPLE JOYSTICK DASHBOARD --- (Press Ctrl+C to quit)")
-    print()
-
-    # Display Button States
-    print('--- BUTTONS ---')
-    for bid, val in buttons.items():
-        # The :2 formats the number to take up 2 spaces for alignment
-        print(f'Button {bid:2}: {"Pressed" if val else "Released"}')
-
-    # Display Axis States
-    print('\n--- AXES ---')
-    for aid, val in axes.items():
-        # The :6 formats the number to take up 6 spaces for alignment
-        print(f'Axis   {aid:2}: {val:+6d}')
+    # --- Use the properties to create each panel ---
+    face_button_panel = create_table(joystick.face_buttons, "Face Buttons")
+    dpad_panel = create_table(joystick.dpad_state, "D-Pad")
+    shoulder_panel = create_table(joystick.shoulder_state, "Shoulders")
+    joystick_panel = create_table(joystick.joystick_state, "Joysticks")
+    back_button_panel = create_table(joystick.back_buttons, "Back Grips")
+    
+    left_column = Columns([face_button_panel, dpad_panel])
+    right_column = Columns([shoulder_panel, back_button_panel])
+    
+    return Columns([left_column, joystick_panel, right_column])
 
 def main():
     """Main execution function."""
@@ -180,20 +288,20 @@ def main():
             num_buttons=NUM_BUTTONS_TO_TRACK
         )
 
-        with Live(display_developer_dashboard(button_values, axis_values), screen=True, vertical_overflow="visible") as live:
+        with Live(display_developer_dashboard(joystick), screen=True, vertical_overflow="visible") as live:
             # Main application loop
             while True:
                 # 1. Update the joystick state by polling events
                 joystick.update()
 
                 # 2. Display the data using our modular functions
-                display_developer_dashboard(joystick)
+                live.update(generate_dashboard_layout(joystick))
 
                 # 3. Wait a moment
-                sdl2.SDL_Delay(16)
+                sdl2.SDL_Delay(REFRESH_DELAY_SEC)
 
     except (RuntimeError, KeyboardInterrupt) as e:
-        print(f"\nERROR: {e}", file=sys.stderr)
+        print(f"ERROR: {e}")
     finally:
         if joystick:
             joystick.close()
