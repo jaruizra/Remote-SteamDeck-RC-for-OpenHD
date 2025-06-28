@@ -10,6 +10,10 @@ import os
 
 # Third-party imports
 import sdl2
+from rich.live import Live
+from rich.table import Table
+from rich.columns import Columns
+from rich.panel import Panel
 
 # --- Configuration Constants ---
 JOYSTICK_INDEX = 0      # The joystick to use (0 is the first one found)
@@ -62,10 +66,8 @@ def init_joystick(joystick_index):
     # I return the joystick I conencted to
     return joystick
 
-def poll_joystick_events(axis_values, button_values):
+def poll_joystick_events(event, axis_values, button_values):
     # Process pending SDL events and stores them in event
-    event = sdl2.SDL_Event()
-
     while sdl2.SDL_PollEvent(event) != 0:
 
         # joystick and triggers
@@ -111,6 +113,37 @@ def display_dashboard(buttons, axes):
         # The :6 formats the number to take up 6 spaces for alignment
         print(f'Axis   {aid:2}: {val:+6d}')
 
+def generate_dashboard(buttons, axes):
+    """
+    Generates a rich layout object to be displayed by Live.
+    This function NO LONGER prints to the screen. It just builds the layout.
+    """
+    # Create a table for buttons
+    button_table = Table(title="Buttons", expand=True)
+    button_table.add_column("ID", justify="right", style="cyan")
+    button_table.add_column("State", style="magenta")
+
+    for bid, val in buttons.items():
+        state = "[bold green]Pressed[/]" if val else "[red]Released[/]"
+        button_table.add_row(str(bid), state)
+
+    # Create a table for axes
+    axis_table = Table(title="Axes", expand=True)
+    axis_table.add_column("ID", justify="right", style="cyan")
+    axis_table.add_column("Value", justify="right", style="magenta")
+
+    for aid, val in axes.items():
+        # Style positive/negative values differently
+        color = "green" if val > 1000 else "red" if val < -1000 else "white"
+        axis_table.add_row(str(aid), f"[{color}]{val:+6d}[/]")
+    
+    # Create a layout with two columns for our tables
+    dashboard_columns = Columns([
+        Panel(button_table, title="[bold cyan]Buttons[/]"),
+        Panel(axis_table, title="[bold cyan]Axes[/]")
+    ])
+    return dashboard_columns
+
 def main():
     """Main execution function."""
     
@@ -125,6 +158,9 @@ def main():
         # this makes sdl2 to generate events -> for the event loop I created
         sdl2.SDL_JoystickEventState(sdl2.SDL_ENABLE)
 
+        # create an sdl_event objet/instance -> read data will be stored
+        event = sdl2.SDL_Event()
+
         # Dictionaries to hold state for axes and buttons
         axis_values = {i: 0 for i in range(NUM_AXES)}
         button_values = {i: 0 for i in range(NUM_BUTTONS)}
@@ -132,10 +168,12 @@ def main():
         # Main loop
         while True:
             # First, update the state from any new events
-            poll_joystick_events(axis_values, button_values)
+            poll_joystick_events(event, axis_values, button_values)
 
             # Now, display the complete, updated state
-            display_dashboard(button_values, axis_values)
+            #display_dashboard(button_values, axis_values)
+            # Update the live display with a newly generated dashboard
+            live.update(generate_dashboard(button_values, axis_values))
 
             # Wait a moment before the next refresh
             sdl2.SDL_Delay(REFRESH_DELAY_MS)
