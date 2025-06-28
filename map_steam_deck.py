@@ -46,18 +46,18 @@ def read_joystick_state(event, axis_values, button_values):
         # joystick and triggers
         if event.type == sdl2.SDL_JOYAXISMOTION:
             # Update axis value if axis is 0, 1, 2, or 3
-            if event.jaxis.axis in axis_values:
-                axis_values[event.jaxis.axis] = event.jaxis.value
+            #if event.jaxis.axis in axis_values:
+                #axis_values[event.jaxis.axis] = event.jaxis.value
                 # Uncomment for debugging:
-                print(f"Axis {event.jaxis.axis} updated: {event.jaxis.value}")
+            print(f"Axis {event.jaxis.axis} updated: {event.jaxis.value}")
 
         # d-pad y botones
         elif event.type in (sdl2.SDL_JOYBUTTONDOWN, sdl2.SDL_JOYBUTTONUP):
             # For buttons 11, 12, 13, 14, update state: 1 for down, 0 for up
-            if event.jbutton.button in button_values:
-                button_values[event.jbutton.button] = 1 if event.type == sdl2.SDL_JOYBUTTONDOWN else 0
+            #if event.jbutton.button in button_values:
+                #button_values[event.jbutton.button] = 1 if event.type == sdl2.SDL_JOYBUTTONDOWN else 0
                 # Uncomment for debugging:
-                print(f"Button {event.jbutton.button} state: {button_values[event.jbutton.button]}")
+            print(f"Button {event.jbutton.button} state: {button_values[event.jbutton.button]}")
 
         # caso de salida, salgo sin error
         elif event.type == sdl2.SDL_QUIT:
