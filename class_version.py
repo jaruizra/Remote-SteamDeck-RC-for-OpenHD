@@ -27,7 +27,7 @@ REFRESH_DELAY_SEC = 1 / REFRESH_RATE_HZ # Calculate delay in seconds
 class Joystick:
     """A class to manage and read data from an SDL2 joystick."""
 
-    def __init__(self, index=0, num_axes=6, num_buttons=17):
+    def __init__(self, index=JOYSTICK_INDEX, num_axes=NUM_AXES_TO_TRACK, num_buttons=NUM_BUTTONS_TO_TRACK):
         """
         Initializes the Joystick, including SDL and the physical device.
 
@@ -65,6 +65,9 @@ class Joystick:
         """
         This is the core polling method. It must be called once per frame.
         It processes all pending SDL events and updates the internal state.
+
+        Returns:
+            bool: False if a quit event was received, True otherwise.
         """
         event = sdl2.SDL_Event()
         # Process pending SDL events and stores them in event
@@ -80,8 +83,8 @@ class Joystick:
             # Check for Quit event
             elif event.type == sdl2.SDL_QUIT:
                 # If the window is closed, we should exit gracefully.
-                self.close()
-                sys.exit(0)
+                return False
+        return True
 
     # --- Getter Methods for Developers ---
 
@@ -106,10 +109,10 @@ class Joystick:
                 ```
         """
         dpad_dict = {
-            "11": self.button_values.get(11, 0),
-            "12": self.button_values.get(12, 0),
-            "13": self.button_values.get(13, 0),
-            "14": self.button_values.get(14, 0),
+            "Up": self.button_values.get(11, 0),
+            "Down": self.button_values.get(12, 0),
+            "Left": self.button_values.get(13, 0),
+            "Right": self.button_values.get(14, 0),
         }
         return dpad_dict
 
@@ -130,10 +133,10 @@ class Joystick:
                 ```
         """
         face_buttons_dict = {
-            "0": self.button_values.get(0, 0),
-            "1": self.button_values.get(1, 0),
-            "2": self.button_values.get(2, 0),
-            "3": self.button_values.get(3, 0),
+            "A": self.button_values.get(0, 0),
+            "B": self.button_values.get(1, 0),
+            "X": self.button_values.get(2, 0),
+            "Y": self.button_values.get(3, 0),
         }
         return face_buttons_dict
 
@@ -156,10 +159,10 @@ class Joystick:
                   ```
         """
         shoulder_dict = {
-            "9": self.button_values.get(9, 0),
-            "10": self.button_values.get(10, 0),
-            "4": self.axis_values.get(4, 0),
-            "5": self.axis_values.get(5, 0),
+            "L1": self.button_values.get(9, 0),
+            "R1": self.button_values.get(10, 0),
+            "L2 Axis": self.axis_values.get(4, 0),
+            "R2 Axis": self.axis_values.get(5, 0),
         }
         return shoulder_dict
 
@@ -183,12 +186,12 @@ class Joystick:
                   ```
         """
         joystick_dict = {
-            "0": self.axis_values.get(0, 0),
-            "1": self.axis_values.get(1, 0),
-            "2": self.axis_values.get(2, 0),
-            "3": self.axis_values.get(3, 0),
-            "7": self.button_values.get(7, 0),
-            "8": self.button_values.get(8, 0),
+            "LX": self.axis_values.get(0, 0),
+            "LY": self.axis_values.get(1, 0),
+            "RX": self.axis_values.get(2, 0),
+            "RY": self.axis_values.get(3, 0),
+            "L3": self.button_values.get(7, 0),
+            "R3": self.button_values.get(8, 0),
         }
         return joystick_dict
 
@@ -210,10 +213,10 @@ class Joystick:
                   ```
         """
         back_buttons_dict = {
-            "L4 (17)": self.button_values.get(17, 0),
-            "R4 (16)": self.button_values.get(16, 0),
-            "L5 (19)": self.button_values.get(19, 0),
-            "R5 (18)": self.button_values.get(18, 0),
+            "L4": self.button_values.get(17, 0),
+            "R4": self.button_values.get(16, 0),
+            "L5": self.button_values.get(19, 0),
+            "R5": self.button_values.get(18, 0),
         }
         return back_buttons_dict
 
@@ -235,7 +238,7 @@ class Joystick:
         """
         full_state_dict = {
             "axes": self.axis_values.copy(),
-            "buttons": self.button_values.copy()
+            "buttons": self.button_values.copy(),
         }
         return full_state_dict
 
@@ -282,11 +285,7 @@ def main():
     joystick = None
     try:
         # Create an instance of our new Joystick class
-        joystick = Joystick(
-            index=JOYSTICK_INDEX,
-            num_axes=NUM_AXES_TO_TRACK,
-            num_buttons=NUM_BUTTONS_TO_TRACK
-        )
+        joystick = Joystick()
 
         with Live(display_developer_dashboard(joystick), screen=True, vertical_overflow="visible") as live:
             # Main application loop
