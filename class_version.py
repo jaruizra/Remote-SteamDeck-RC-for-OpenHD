@@ -197,7 +197,7 @@ class Joystick:
 
     @property
     def back_buttons(self):
-       """
+        """
         Returns the state of the back grip buttons (L4, R4, L5, R5).
 
         Returns:
