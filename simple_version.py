@@ -89,25 +89,28 @@ def poll_joystick_events(axis_values, button_values):
             sys.exit(0)
 
 def display_dashboard(buttons, axes, is_first_run=False):
-    num_lines = 1 + 1 + len(buttons) + 1 + len(axes) + 2
-    if not is_first_run:
-        print(f'\x1b[{num_lines}A', end='') # Move cursor up to overwrite
+    """
+    Render one frame of the joystick dashboard, overwriting the previous one
+    """
+
+    num_lines = 1 + 1 + 1 + len(buttons) + 1 + 1 + len(axes)
+    if not first_run:
+        # move to beginning of the first line of previous frame
+        print(f'\033[{num_lines}F', end='', flush=True)
 
     print("--- SIMPLE JOYSTICK DASHBOARD --- (Press Ctrl+C to quit)")
 
     # Display Button States
-    print("\n\x1b[2K--- BUTTONS ---") # \x1b[2K clears the line
-    for button_id, value in buttons.items():
-        # clear terminal on windows or unix
-        state = "Pressed" if value == 1 else "Released"
+    print('--- BUTTONS ---')
+    for bid, val in buttons.items():
         # The :2 formats the number to take up 2 spaces for alignment
-        print(f"\x1b[2KButton {button_id:2}: {state}")
+        print(f'Button {bid:2}: {"Pressed" if val else "Released"}')
 
     # Display Axis States
-    print("\n\x1b[2K--- AXES ---")
-    for axis_id, value in axes.items():
+    print('\n--- AXES ---')
+    for aid, val in axes.items():
         # The :6 formats the number to take up 6 spaces for alignment
-        print(f"\x1b[2KAxis   {axis_id:2}: {value:6}")
+        print(f'Axis   {aid:2}: {val:+6d}')
 
 def main():
     """Main execution function."""
