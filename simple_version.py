@@ -22,7 +22,7 @@ REFRESH_DELAY_MS = 1000 // REFRESH_RATE_HZ # Calculate delay in milliseconds
 REFRESH_RATE_MS = 16  # 60Hz frecuencia aprox
 
 def init_joystick(joystick_index):
-     """
+    """
     Initializes the SDL2 library and opens a specific joystick
 
     Args:
@@ -62,7 +62,7 @@ def init_joystick(joystick_index):
     # I return the joystick I conencted to
     return joystick
 
-def read_joystick_state(event, axis_values, button_values):
+def poll_joystick_events(axis_values, button_values):
     # Process pending SDL events and stores them in event
     event = sdl2.SDL_Event()
 
@@ -88,25 +88,26 @@ def read_joystick_state(event, axis_values, button_values):
             # Quit with error
             sys.exit(0)
 
-def display_dashboard(buttons, axes):
-    # Clear the terminal screen
-    os.system('cls' if os.name == 'nt' else 'clear')
+def display_dashboard(buttons, axes, is_first_run=False):
+    num_lines = 1 + 1 + len(buttons) + 1 + len(axes) + 2
+    if not is_first_run:
+        print(f'\x1b[{num_lines}A', end='') # Move cursor up to overwrite
 
     print("--- JOYSTICK DASHBOARD --- (Press Ctrl+C to quit)")
 
     # Display Button States
-    print("\n--- BUTTONS ---")
+    print("\n\x1b[2K--- BUTTONS ---") # \x1b[2K clears the line
     for button_id, value in buttons.items():
         # clear terminal on windows or unix
         state = "Pressed" if value == 1 else "Released"
         # The :2 formats the number to take up 2 spaces for alignment
-        print(f"Button {button_id:2}: {state}")
+        print(f"\x1b[2KButton {button_id:2}: {state}")
 
     # Display Axis States
-    print("\n--- AXES ---")
+    print("\n\x1b[2K--- AXES ---")
     for axis_id, value in axes.items():
         # The :6 formats the number to take up 6 spaces for alignment
-        print(f"Axis   {axis_id:2}: {value:6}")
+        print(f"\x1b[2KAxis   {axis_id:2}: {value:6}")
 
 def main():
     """Main execution function."""
@@ -125,6 +126,9 @@ def main():
         # Dictionaries to hold state for axes and buttons
         axis_values = {i: 0 for i in range(NUM_BUTTONS)}
         button_values = {i: 0 for i in range(NUM_AXES)}
+
+        # Print the initial layout once to prevent cursor errors
+        display_dashboard(button_values, axis_values, is_first_run=True)
 
         # Main loop
         while True:
