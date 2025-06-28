@@ -10,6 +10,8 @@ import time
 
 # Receiver IP -> destination
 UDP_IP = "100.121.21.44"
+#UDP_IP = "192.168.3.1"
+
 UDP_PORT = 5005
 REFRESH_RATE_MS = 16  # 60Hz frecuencia aprox
 

@@ -11,11 +11,6 @@ import time
 # lectura y salida
 REFRESH_RATE_MS = 16  # 60Hz frecuencia aprox
 
-def init_udp_socket():
-    # Create the UDP socket
-    # ipv4 values of Ip and Datagram(udp) mode
-    return socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
 def init_joystick():
     # initiate a joystick subsystem
     if sdl2.SDL_Init(sdl2.SDL_INIT_JOYSTICK) < 0:
@@ -43,26 +38,26 @@ def read_joystick_state(event, axis_values, button_values):
     # Process pending SDL events and stores them in event
     while sdl2.SDL_PollEvent(event) != 0:
 
+        #print("The event is = " + str(event.type))
+
         # joystick and triggers
         if event.type == sdl2.SDL_JOYAXISMOTION:
-            # Update axis value if axis is 0, 1, 2, or 3
-            if event.jaxis.axis in axis_values:
-                axis_values[event.jaxis.axis] = event.jaxis.value
-                # Uncomment for debugging:
-                print(f"Axis {event.jaxis.axis} updated: {event.jaxis.value}")
+            value = event.jaxis.value
+            # Uncomment for debugging:
+            print(f"Axis {event.jaxis.axis} updated: {value}")
 
         # d-pad y botones
         elif event.type in (sdl2.SDL_JOYBUTTONDOWN, sdl2.SDL_JOYBUTTONUP):
-            # For buttons 11, 12, 13, 14, update state: 1 for down, 0 for up
-            if event.jbutton.button in button_values:
-                button_values[event.jbutton.button] = 1 if event.type == sdl2.SDL_JOYBUTTONDOWN else 0
-                # Uncomment for debugging:
-                print(f"Button {event.jbutton.button} state: {button_values[event.jbutton.button]}")
+            print("The event is = " + str(event.jbutton.button))
+            value = event.jbutton.state
+            # Uncomment for debugging:
+            print(f"Button {event.jbutton.button} state: {value}")
 
         # caso de salida, salgo sin error
         elif event.type == sdl2.SDL_QUIT:
             # sale con error
             sys.exit(0)
+            
 
 def send_state(sock, ip, port, axis_values, button_values):
     # Prepare a JSON message with the state of axes and buttons
