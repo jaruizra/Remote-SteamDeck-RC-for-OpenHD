@@ -93,7 +93,7 @@ def display_dashboard(buttons, axes, is_first_run=False):
     if not is_first_run:
         print(f'\x1b[{num_lines}A', end='') # Move cursor up to overwrite
 
-    print("--- JOYSTICK DASHBOARD --- (Press Ctrl+C to quit)")
+    print("--- SIMPLE JOYSTICK DASHBOARD --- (Press Ctrl+C to quit)")
 
     # Display Button States
     print("\n\x1b[2K--- BUTTONS ---") # \x1b[2K clears the line
