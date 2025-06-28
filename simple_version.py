@@ -174,7 +174,7 @@ def main():
                 # Now, display the complete, updated state
                 #display_dashboard(button_values, axis_values)
                 # Update the live display with a newly generated dashboard
-                Live.update(generate_dashboard(button_values, axis_values))
+                live.update(generate_dashboard(button_values, axis_values))
 
                 # Wait a moment before the next refresh
                 sdl2.SDL_Delay(REFRESH_DELAY_MS)
