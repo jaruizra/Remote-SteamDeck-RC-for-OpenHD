@@ -88,15 +88,13 @@ def poll_joystick_events(axis_values, button_values):
             # Quit with error
             sys.exit(0)
 
-def display_dashboard(buttons, axes, is_first_run=False):
+def display_dashboard(buttons, axes):
     """
     Render one frame of the joystick dashboard, overwriting the previous one
     """
 
-    num_lines = 1 + 1 + 1 + len(buttons) + 1 + 1 + len(axes)
-    if not is_first_run:
-        # move to beginning of the first line of previous frame
-        print(f'\033[{num_lines}F', end='', flush=True)
+    # clear the whole terminal
+    os.system('clear' if os.name != 'nt' else 'cls')
 
     print("--- SIMPLE JOYSTICK DASHBOARD --- (Press Ctrl+C to quit)")
     print()
@@ -130,9 +128,6 @@ def main():
         # Dictionaries to hold state for axes and buttons
         axis_values = {i: 0 for i in range(NUM_AXES)}
         button_values = {i: 0 for i in range(NUM_BUTTONS)}
-
-        # Print the initial layout once to prevent cursor errors
-        display_dashboard(button_values, axis_values, is_first_run=True)
 
         # Main loop
         while True:
