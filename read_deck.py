@@ -1,123 +1,97 @@
 #!/usr/bin/python3
+"""
+A network transmitter that reads controller state using the Joystick class
+and sends it over UDP.
+
+This script imports the `Joystick` class from `steamdeck_input_api.py` and uses
+it to get the full state of the controller, which is then serialized to JSON
+and broadcasted on the network.
+"""
+
+if os.geteuid() != 0:
+    print("Error: This script must be run as root. Please use 'sudo'.")
+    sys.exit(1)
 
 # librerias
 import sys
 import socket
 import json
-import sdl2
-import sdl2.ext
 import time
 
-# Receiver IP -> destination
-UDP_IP = "100.121.21.44"
-#UDP_IP = "192.168.3.1"
+# --- Assumes your main script is named steamdeck_input_api.py ---
+try:
+    from joystick_script import Joystick
+except ImportError:
+    print("Error: Could not import the Joystick class.")
+    print("Please ensure 'joystick_script.py' is in the same directory.")
+    sys.exit(1)
 
+
+# --- Network Configuration ---
+# The destination IP address for the UDP packets.
+# Change this to the IP address of the receiving computer.UDP_IP = "100.121.21.44"
+UDP_IP = "192.168.3.1"
 UDP_PORT = 5005
-REFRESH_RATE_MS = 16  # 60Hz frecuencia aprox
+
+# --- Performance Configuration ---
+TRANSMIT_RATE_HZ = 60
+TRANSMIT_DELAY_SEC = 1 / TRANSMIT_RATE_HZ
 
 def init_udp_socket():
     # Create the UDP socket
     # ipv4 values of Ip and Datagram(udp) mode
     return socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-def init_joystick():
-    # initiate a joystick subsystem
-    if sdl2.SDL_Init(sdl2.SDL_INIT_JOYSTICK) < 0:
-        # error
-        print("SDL Init error:", sdl2.SDL_GetError().decode())
-        sys.exit(1)
-    # check the number of joystick connected
-    if sdl2.SDL_NumJoysticks() < 1:
-        #error
-        print("No joystick found.")
-        sdl2.SDL_Quit()
-        sys.exit(1)
-
-    # I get the firsrt joystick to use
-    joystick = sdl2.SDL_JoystickOpen(0)
-    # error to open the joystick
-    if not joystick:
-        print("Failed to open joystick:", sdl2.SDL_GetError().decode())
-        sdl2.SDL_Quit()
-        sys.exit(1)
-    # I return the joystick I conencted to
-    return joystick
-
-def read_joystick_state(event, axis_values, button_values):
-    # Process pending SDL events and stores them in event
-    while sdl2.SDL_PollEvent(event) != 0:
-
-        # joystick and triggers
-        if event.type == sdl2.SDL_JOYAXISMOTION:
-            # Update axis value if axis is 0, 1, 2, or 3
-            if event.jaxis.axis in axis_values:
-                axis_values[event.jaxis.axis] = event.jaxis.value
-                # Uncomment for debugging:
-                # print(f"Axis {event.jaxis.axis} updated: {event.jaxis.value}")
-
-        # d-pad y botones
-        elif event.type in (sdl2.SDL_JOYBUTTONDOWN, sdl2.SDL_JOYBUTTONUP):
-            # For buttons 11, 12, 13, 14, update state: 1 for down, 0 for up
-            if event.jbutton.button in button_values:
-                button_values[event.jbutton.button] = 1 if event.type == sdl2.SDL_JOYBUTTONDOWN else 0
-                # Uncomment for debugging:
-                # print(f"Button {event.jbutton.button} state: {button_values[event.jbutton.button]}")
-
-        # caso de salida, salgo sin error
-        elif event.type == sdl2.SDL_QUIT:
-            # sale con error
-            sys.exit(0)
-
-def send_state(sock, ip, port, axis_values, button_values):
-    # Prepare a JSON message with the state of axes and buttons
-    data = {
-        "axis": axis_values,
-        "buttons": button_values
-    }
-    # create the message to share in a json string
-    message = json.dumps(data)
-    # convert json to byte throught the udp socket
-    sock.sendto(message.encode(), (ip, port))
-
 def main():
+    """
+    Main execution function. Initializes the joystick and the network socket,
+    then enters a loop to read and transmit data.
+    """
     # Create the udp socket
     sock = init_udp_socket()
 
-    # open a joystick
-    joystick = init_joystick()
-
-    # Enable processing of joystick events with sdl event handling mechanism
-    # this makes sdl2 to generate events -> for the event loop I created
-    sdl2.SDL_JoystickEventState(sdl2.SDL_ENABLE)
-
-    # create an sdl_event objet/instance -> read data will be stored
-    event = sdl2.SDL_Event()
-
-    # Dictionaries to hold state for axes and buttons
-    axis_values = {0: 0, 1: 0, 2: 0, 3: 0}
-    button_values = {11: 0, 12: 0, 13: 0, 14: 0}
-
     try:
-        # bucle
+        # 1. Create an instance of the Joystick class.
+        # This handles all the SDL initialization and setup.
+        joystick = Joystick()
+        print(f"Transmitting joystick data to {UDP_IP}:{UDP_PORT}...")
+        print("Press Ctrl+C to stop.")
+        
+        # 2. Start the main transmission loop.
         while True:
-            # read values
-            read_joystick_state(event, axis_values, button_values)
-            # send values
-            send_state(sock, UDP_IP, UDP_PORT, axis_values, button_values)
-            # delay in the reading of events
-            sdl2.SDL_Delay(REFRESH_RATE_MS)
+            # ALWAYS call .update() once per loop to poll for new events.
+            joystick.update()
+
+            # Get the specific states you requested from the controller.
+            # Each of these is a fast dictionary read.
+            data_to_send = {
+                "joysticks": joystick.joystick_state,
+                "face_buttons": joystick.face_buttons,
+                "shoulders": joystick.shoulder_state,
+                "dpad": joystick.dpad_state
+            }
+
+            # Serialize the combined dictionary to a JSON string.
+            # We use separators=(',', ':') for a more compact message.
+            message = json.dumps(data_to_send, separators=(',', ':'))
+
+            # Send the data over the network. The string must be encoded to bytes.
+            sock.sendto(message.encode('utf-8'), (UDP_IP, UDP_PORT))
+
+            # Wait a moment to maintain the desired transmission rate.
+            time.sleep(TRANSMIT_DELAY_SEC)
     
-    # close conexion at the end
-    except KeyboardInterrupt:
-        print("Exiting transmitter...")
+    # Handle errors
+    except (RuntimeError, KeyboardInterrupt) as e:
+        # Handle errors from the Joystick class or a Ctrl+C press.
+        print(f"\nShutting down transmitter... Reason: {e}")
     
     finally:
-        # close sdl joystick
-        sdl2.SDL_JoystickClose(joystick)
-        # quit sdl2
-        sdl2.SDL_Quit()
-        # close udp socket connection
+        # 4. Clean up all resources when the script exits.
+        if joystick:
+            joystick.close()
         sock.close()
+        print("Socket closed.")
 
 # Main program
 if __name__ == "__main__":

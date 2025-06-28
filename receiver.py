@@ -1,13 +1,37 @@
 #!/usr/bin/python3
-import sys
-import socket
-import uinput   # create the controller 
-import json
+"""
+A network receiver that listens for joystick data over UDP and creates a
+virtual joystick on the local machine using the 'uinput' library.
 
-# IP of the receiver tailscale ip
-UDP_IP = "100.121.21.44"  # Listen to tailscale interface
+This script must be run with root privileges (e.g., 'sudo python3 receiver.py')
+to have permission to create a virtual input device.
+"""
+
+import sys
+import os
+import socket
+import json
+import time
+
+try:
+    import uinput
+except ImportError:
+    print("Error: The 'python-uinput' library is required.")
+    print("Please install it using: pip install python-uinput")
+    sys.exit(1)
+
+# --- Network Configuration ---
+# The IP address to listen on. "0.0.0.0" means listen on all available interfaces.
+UDP_IP = "0.0.0.0"
 UDP_PORT = 5005
-BUFFER_SIZE = 1024
+BUFFER_SIZE = 1024  # Max size of the received message
+
+def check_root_permissions():
+    """Exits the script if it's not run as root."""
+    if os.geteuid() != 0:
+        print("Error: This script must be run as root to create a virtual device.")
+        print("Please use 'sudo python3 joystick_receiver.py'")
+        sys.exit(1)
 
 def init_udp_socket():
     # Create the UDP socket
