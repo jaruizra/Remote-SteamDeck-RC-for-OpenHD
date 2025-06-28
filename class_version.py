@@ -11,6 +11,10 @@ reusable for other developers.
 import sys
 import os
 import sdl2
+from rich.live import Live
+from rich.table import Table
+from rich.columns import Columns
+from rich.panel import Panel
 
 # --- Configuration Constants ---
 # Note: These are common values for a Steam Deck. Adjust for your controller.
@@ -142,36 +146,28 @@ class Joystick:
         sdl2.SDL_Quit()
         print("Joystick closed and SDL resources released.")
 
+def display_dashboard(buttons, axes):
+    """
+    Render one frame of the joystick dashboard, overwriting the previous one
+    """
 
-def display_developer_dashboard(joystick):
-    """A dashboard demonstrating how to use the getter methods."""
-    # This function now takes the whole joystick object
-    # and calls its methods to get the data it needs.
+    # clear the whole terminal
+    os.system('clear' if os.name != 'nt' else 'cls')
 
-    # --- Prepare data for display by calling the new methods ---
-    dpad = joystick.get_dpad_state()
-    face = joystick.get_face_button_state()
-    shoulders = joystick.get_shoulder_state()
-    joysticks = joystick.get_joystick_full_state()
+    print("--- SIMPLE JOYSTICK DASHBOARD --- (Press Ctrl+C to quit)")
+    print()
 
-    # --- Display Logic ---
-    num_lines = 10 + len(dpad) + len(face) + len(shoulders) + len(joysticks)
-    # Move cursor up to overwrite (flicker-free update)
-    print(f'\x1b[{num_lines}A', end='')
+    # Display Button States
+    print('--- BUTTONS ---')
+    for bid, val in buttons.items():
+        # The :2 formats the number to take up 2 spaces for alignment
+        print(f'Button {bid:2}: {"Pressed" if val else "Released"}')
 
-    print("--- DEVELOPER JOYSTICK DASHBOARD ---")
-    print("\x1b[2K--- D-Pad State ---")
-    for name, value in dpad.items(): print(f"\x1b[2K{name}: {value}")
-
-    print("\x1b[2K--- Face Button State ---")
-    for name, value in face.items(): print(f"\x1b[2K{name}: {value}")
-
-    print("\x1b[2K--- Shoulder State ---")
-    for name, value in shoulders.items(): print(f"\x1b[2K{name}: {value}")
-
-    print("\x1b[2K--- Joystick Full State ---")
-    for name, value in joysticks.items(): print(f"\x1b[2K{name}: {value}")
-
+    # Display Axis States
+    print('\n--- AXES ---')
+    for aid, val in axes.items():
+        # The :6 formats the number to take up 6 spaces for alignment
+        print(f'Axis   {aid:2}: {val:+6d}')
 
 def main():
     """Main execution function."""
@@ -184,19 +180,17 @@ def main():
             num_buttons=NUM_BUTTONS_TO_TRACK
         )
 
-        # Print the initial layout once to prevent cursor errors
-        display_developer_dashboard(joystick)
+        with Live(generate_dashboard(button_values, axis_values), screen=True, vertical_overflow="visible") as live:
+            # Main application loop
+            while True:
+                # 1. Update the joystick state by polling events
+                joystick.update()
 
-        # Main application loop
-        while True:
-            # 1. Update the joystick state by polling events
-            joystick.update()
+                # 2. Display the data using our modular functions
+                display_developer_dashboard(joystick)
 
-            # 2. Display the data using our modular functions
-            display_developer_dashboard(joystick)
-
-            # 3. Wait a moment
-            sdl2.SDL_Delay(16)
+                # 3. Wait a moment
+                sdl2.SDL_Delay(16)
 
     except (RuntimeError, KeyboardInterrupt) as e:
         print(f"\nERROR: {e}", file=sys.stderr)
