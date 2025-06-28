@@ -22,7 +22,7 @@ JOYSTICK_INDEX = 0          # The joystick to use (0 is the first one found)
 NUM_AXES_TO_TRACK = 6       # Number of axes to monitor (Steam Deck has 6)
 NUM_BUTTONS_TO_TRACK = 20   # Number of buttons to monitor (covers back buttons)
 REFRESH_RATE_HZ = 60        # Target refresh rate for the display
-REFRESH_DELAY_SEC = 1 / REFRESH_RATE_HZ # Calculate delay in seconds
+REFRESH_DELAY_SEC = int(1 / REFRESH_RATE_HZ) # Calculate delay in seconds
 
 class Joystick:
     """A class to manage and read data from an SDL2 joystick."""
