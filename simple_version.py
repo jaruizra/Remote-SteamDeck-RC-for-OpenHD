@@ -165,18 +165,19 @@ def main():
         axis_values = {i: 0 for i in range(NUM_AXES)}
         button_values = {i: 0 for i in range(NUM_BUTTONS)}
 
-        # Main loop
-        while True:
-            # First, update the state from any new events
-            poll_joystick_events(event, axis_values, button_values)
+        with Live(generate_dashboard(button_values, axis_values), screen=True, vertical_overflow="visible") as live:
+            # Main loop
+            while True:
+                # First, update the state from any new events
+                poll_joystick_events(event, axis_values, button_values)
 
-            # Now, display the complete, updated state
-            #display_dashboard(button_values, axis_values)
-            # Update the live display with a newly generated dashboard
-            live.update(generate_dashboard(button_values, axis_values))
+                # Now, display the complete, updated state
+                #display_dashboard(button_values, axis_values)
+                # Update the live display with a newly generated dashboard
+                Live.update(generate_dashboard(button_values, axis_values))
 
-            # Wait a moment before the next refresh
-            sdl2.SDL_Delay(REFRESH_DELAY_MS)
+                # Wait a moment before the next refresh
+                sdl2.SDL_Delay(REFRESH_DELAY_MS)
     
     # Handle graceful shutdown on Ctrl+C
     except KeyboardInterrupt:
