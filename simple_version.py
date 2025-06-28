@@ -18,7 +18,7 @@ from rich.panel import Panel
 # --- Configuration Constants ---
 JOYSTICK_INDEX = 0      # The joystick to use (0 is the first one found)
 NUM_AXES = 6            # Number of axes to monitor (Steam Deck has 6)
-NUM_BUTTONS = 19        # Number of buttons to monitor (Steam Deck has 17)
+NUM_BUTTONS = 20        # Number of buttons to monitor (Steam Deck has 19)
 REFRESH_RATE_HZ = 60    # Target refresh rate for the display
 REFRESH_DELAY_MS = 1000 // REFRESH_RATE_HZ # Calculate delay in milliseconds
 
