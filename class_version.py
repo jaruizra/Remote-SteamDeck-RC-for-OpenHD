@@ -287,7 +287,7 @@ def main():
         # Create an instance of our new Joystick class
         joystick = Joystick()
 
-        with Live(display_developer_dashboard(joystick), screen=True, vertical_overflow="visible") as live:
+        with Live(generate_dashboard_layout(joystick), screen=True, vertical_overflow="visible") as live:
             # Main application loop
             while True:
                 # 1. Update the joystick state by polling events
