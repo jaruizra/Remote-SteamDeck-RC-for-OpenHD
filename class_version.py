@@ -155,7 +155,7 @@ class Joystick:
                   }
                   ```
         """
-        shoulder_dict {
+        shoulder_dict = {
             "9": self.button_values.get(9, 0),
             "10": self.button_values.get(10, 0),
             "4": self.axis_values.get(4, 0),
@@ -182,7 +182,7 @@ class Joystick:
                   }
                   ```
         """
-        joystick_dict {
+        joystick_dict = {
             "0": self.axis_values.get(0, 0),
             "1": self.axis_values.get(1, 0),
             "2": self.axis_values.get(2, 0),
@@ -209,7 +209,7 @@ class Joystick:
                   }
                   ```
         """
-        back_buttons_dict {
+        back_buttons_dict = {
             "L4 (17)": self.button_values.get(17, 0),
             "R4 (16)": self.button_values.get(16, 0),
             "L5 (19)": self.button_values.get(19, 0),
@@ -233,7 +233,7 @@ class Joystick:
                   }
                   ```
         """
-        full_state_dict {
+        full_state_dict = {
             "axes": self.axis_values.copy(),
             "buttons": self.button_values.copy()
         }
