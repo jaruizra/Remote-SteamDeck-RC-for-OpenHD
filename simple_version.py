@@ -94,7 +94,7 @@ def display_dashboard(buttons, axes, is_first_run=False):
     """
 
     num_lines = 1 + 1 + 1 + len(buttons) + 1 + 1 + len(axes)
-    if not first_run:
+    if not is_first_run:
         # move to beginning of the first line of previous frame
         print(f'\033[{num_lines}F', end='', flush=True)
 
