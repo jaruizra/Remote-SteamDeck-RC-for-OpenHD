@@ -146,7 +146,7 @@ class Joystick:
         sdl2.SDL_Quit()
         print("Joystick closed and SDL resources released.")
 
-def display_dashboard(buttons, axes):
+def display_developer_dashboard(buttons, axes):
     """
     Render one frame of the joystick dashboard, overwriting the previous one
     """
@@ -180,7 +180,7 @@ def main():
             num_buttons=NUM_BUTTONS_TO_TRACK
         )
 
-        with Live(generate_dashboard(button_values, axis_values), screen=True, vertical_overflow="visible") as live:
+        with Live(display_developer_dashboard(button_values, axis_values), screen=True, vertical_overflow="visible") as live:
             # Main application loop
             while True:
                 # 1. Update the joystick state by polling events
