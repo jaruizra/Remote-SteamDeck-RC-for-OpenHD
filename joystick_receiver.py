@@ -22,7 +22,7 @@ except ImportError:
 
 # --- Network Configuration ---
 # The IP address to listen on. "0.0.0.0" means listen on all available interfaces.
-UDP_IP = "0.0.0.0"
+UDP_IP = "127.0.0.1"
 UDP_PORT = 5005
 BUFFER_SIZE = 1024  # Max size of the received message
 
