@@ -88,85 +88,70 @@ def create_virtual_joystick():
 def main():
     """Main execution function."""
     check_root_permissions()
-    # Create the udp socket
+    # init_udp_socket() already binds the socket.
     sock = init_udp_socket()
-    sock.bind((UDP_IP, UDP_PORT))
-    # Create the virtual joystick device
     device = create_virtual_joystick()
     
     print(f"Listening on UDP {UDP_IP}:{UDP_PORT}...")
     print("Virtual joystick created. Press Ctrl+C to stop.")
 
+    # Initialize state variables before the loop
+    last_packet_time = time.time()
+    last_axes = [0] * 6
+    last_buttons = [0] * 10
+
     try:
-        # Main listening loop
         while True:
             sock.settimeout(0.05)
             try:
-                # Block and wait for one packet to arrive.
                 data, addr = sock.recvfrom(BUFFER_SIZE)
 
-                # Ensure the packet has the correct size before processing.
                 if len(data) == PACKET_SIZE:
                     last_packet_time = time.time()
-                    # Unpack the binary data using the defined format.
                     unpacked_data = struct.unpack(PACKET_FORMAT, data)
                     
-                    # Extract the axis and button values.
-                    # We ignore the sequence number at index 0 - sequence number
-                    axes = unpacked_data[1:7]
-                    buttons = unpacked_data[7:17]
+                    # Update the last known state
+                    last_axes = list(unpacked_data[1:7])
+                    last_buttons = list(unpacked_data[7:17])
             
             except socket.timeout:
                 pass
             
-            # Check if we exceeded the timeout
             if time.time() - last_packet_time > TIMEOUT_SEC:
-                # Use the old axes but zero out the first 4 (joysticks)
                 axes_to_send = last_axes.copy()
-                axes_to_send[0:4] = [0]*4
-                buttons_to_send = last_buttons  # Keep last button states
+                axes_to_send[0:4] = [0] * 4  # Zero out joysticks
+                buttons_to_send = last_buttons # Keep last button states
             else:
-                # Use last valid data
                 axes_to_send = last_axes
                 buttons_to_send = last_buttons
 
             # --- Emit all events to the virtual device ---
-            # syn=False batches them until we call device.syn() at the end.
-            device.emit(uinput.ABS_X, axes[0], syn=False)
-            device.emit(uinput.ABS_Y, axes[1], syn=False)
-            device.emit(uinput.ABS_RX, axes[2], syn=False)
-            device.emit(uinput.ABS_RY, axes[3], syn=False)
-            # L2 Trigger
-            device.emit(uinput.ABS_Z, axes[4], syn=False)
-            # R2 Trigger 
-            device.emit(uinput.ABS_RZ, axes[5], syn=False) 
+            # Use the variables that contain the failsafe logic
+            device.emit(uinput.ABS_X, axes_to_send[0], syn=False)
+            device.emit(uinput.ABS_Y, axes_to_send[1], syn=False)
+            device.emit(uinput.ABS_RX, axes_to_send[2], syn=False)
+            device.emit(uinput.ABS_RY, axes_to_send[3], syn=False)
+            device.emit(uinput.ABS_Z, axes_to_send[4], syn=False)
+            device.emit(uinput.ABS_RZ, axes_to_send[5], syn=False) 
             
-            # Map the 10 received buttons to their uinput events
-            device.emit(uinput.BTN_SOUTH, buttons[0], syn=False) # A
-            device.emit(uinput.BTN_EAST,  buttons[1], syn=False) # B
-            device.emit(uinput.BTN_NORTH, buttons[2], syn=False) # X
-            device.emit(uinput.BTN_WEST,  buttons[3], syn=False) # Y
-            device.emit(uinput.BTN_TL,    buttons[4], syn=False) # L1
-            device.emit(uinput.BTN_TR,    buttons[5], syn=False) # R1
+            device.emit(uinput.BTN_SOUTH, buttons_to_send[0], syn=False)
+            device.emit(uinput.BTN_EAST,  buttons_to_send[1], syn=False)
+            device.emit(uinput.BTN_NORTH, buttons_to_send[2], syn=False)
+            device.emit(uinput.BTN_WEST,  buttons_to_send[3], syn=False)
+            device.emit(uinput.BTN_TL,    buttons_to_send[4], syn=False)
+            device.emit(uinput.BTN_TR,    buttons_to_send[5], syn=False)
 
-            # D-Pad logic using the 4 d-pad buttons
-            # buttons[6] = Up
-            # buttons[7] = Down
-            # buttons[8] = Left
-            # buttons[9] = Right
-            hat_y = buttons[7] - buttons[6]  # Down - Up
-            hat_x = buttons[9] - buttons[8]  # Right - Left
+            hat_y = buttons_to_send[7] - buttons_to_send[6]
+            hat_x = buttons_to_send[9] - buttons_to_send[8]
             device.emit(uinput.ABS_HAT0Y, hat_y, syn=False)
             device.emit(uinput.ABS_HAT0X, hat_x, syn=False)
 
-            # Apply all the batched events at once.
             device.syn()
 
     except KeyboardInterrupt:
         print("\nShutting down receiver...")
 
     finally:
-        # Clean up resources.
         sock.close()
         print("Socket closed and virtual device released.")
 
