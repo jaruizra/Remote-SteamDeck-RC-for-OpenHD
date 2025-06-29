@@ -32,11 +32,11 @@ def generate_dashboard_layout(joystick):
     VIRTUAL joystick created by joystick_receiver.py.
     """
     def scale_trigger(value):
-        """Scales a joystick axis from -32768..32767 to 0..100."""
+        """Scales a joystick axis from -32768..32767 to 100..0 (reversed)."""
         # Clamp the value to the expected range
         value = max(-32768, min(value, 32767))
-        # Apply linear scaling
-        return int(((value + 32768) / 65535) * 100)
+        # Apply reversed linear scaling
+        return int(((32767 - value) / 65535) * 100)
 
     def create_table(data_dict, title):
         table = Table(title=title, expand=True, show_header=False, border_style="dim")
