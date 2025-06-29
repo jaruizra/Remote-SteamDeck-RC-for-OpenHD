@@ -80,6 +80,20 @@ class Joystick:
             elif event.type in (sdl2.SDL_JOYBUTTONDOWN, sdl2.SDL_JOYBUTTONUP):
                 if event.jbutton.button in self.button_values:
                     self.button_values[event.jbutton.button] = event.jbutton.state
+
+            # 3) **NEW** – HAT → fake axis 6 / 7
+            elif event.type == sdl2.SDL_JOYHATMOTION:
+                val = event.jhat.value
+
+                # Right – Left  →  +1, 0, –1
+                hat_x =  (1 if val & sdl2.SDL_HAT_RIGHT else 0) - (1 if val & sdl2.SDL_HAT_LEFT else 0)
+                # Down – Up     →  +1, 0, –1   (positive down, like Linux ABS_HAT0Y)
+                hat_y =  (1 if val & sdl2.SDL_HAT_DOWN  else 0) - (1 if val & sdl2.SDL_HAT_UP  else 0)
+
+                # scale to the same ±32767 range the other axes use
+                self.axis_values[6] = hat_x
+                self.axis_values[7] = hat_y
+
             # Check for Quit event
             elif event.type == sdl2.SDL_QUIT:
                 # If the window is closed, we should exit gracefully.
