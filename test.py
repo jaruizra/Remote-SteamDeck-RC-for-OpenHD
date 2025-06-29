@@ -51,6 +51,14 @@ def generate_dashboard_layout(joystick):
 
     # --- Manually create dictionaries to match the VIRTUAL joystick layout ---
 
+    # Correct Joystick Mapping (SDL often maps Z/RZ differently)
+    virtual_joystick_state = {
+        "LX": joystick.axis_values.get(0, 0),
+        "LY": joystick.axis_values.get(1, 0),
+        "RX": joystick.axis_values.get(3, 0), # RX is often axis 3
+        "RY": joystick.axis_values.get(4, 0), # RY is often axis 4
+    }
+
     # The virtual D-Pad is a HAT switch, which SDL reads as axes (6 and 7).
     hat_x = joystick.axis_values.get(6, 0)
     hat_y = joystick.axis_values.get(7, 0)
@@ -61,19 +69,19 @@ def generate_dashboard_layout(joystick):
         "Right": 1 if hat_x > 0 else 0,
     }
 
-    # The virtual shoulder buttons (L1/R1) map to different button indices.
+    # The virtual shoulder buttons and triggers map to different indices.
     virtual_shoulder_state = {
         "L1": joystick.button_values.get(4, 0),
         "R1": joystick.button_values.get(5, 0),
-        "L2": joystick.axis_values.get(4, 0),
-        "R2": joystick.axis_values.get(5, 0),
+        "L2": joystick.axis_values.get(2, 0), # L2 is often axis 2
+        "R2": joystick.axis_values.get(5, 0), # R2 is often axis 5
     }
 
     # Use the original properties for things that don't change.
     face_button_panel = create_table(joystick.face_buttons, "Face Buttons")
-    joystick_panel = create_table(joystick.joystick_state, "Joysticks")
     
     # Use our new, manually created dictionaries for the panels.
+    joystick_panel = create_table(virtual_joystick_state, "Joysticks")
     dpad_panel = create_table(virtual_dpad_state, "D-Pad")
     shoulder_panel = create_table(virtual_shoulder_state, "Shoulders")
     
