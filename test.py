@@ -43,9 +43,6 @@ def generate_dashboard_layout(joystick):
         table.add_column("Item", style="cyan", no_wrap=True)
         table.add_column("Value", justify="right")
         for item, value in data_dict.items():
-            # Special display for scaled triggers
-            if "L2" in item or "R2" in item:
-                table.add_row(item, f"[yellow]{value:3d}%[/]")
             # Standard display for buttons
             elif isinstance(value, int) and value in (0, 1):
                 state = "[bold green]Pressed[/]" if value else "[red]Off[/]"
