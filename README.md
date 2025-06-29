@@ -78,7 +78,7 @@ Install Git and Python Pip:
 
 ```bash
 sudo apt update
-sudo apt install git python3-pip -y
+sudo apt install git python3-pip libsdl2-2.0-0 libsdl2-dev -y
 ```
 
 ## 2. Clone the Project Repository

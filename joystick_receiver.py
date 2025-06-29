@@ -22,14 +22,14 @@ except ImportError:
 
 # --- Network Configuration ---
 # The IP address to listen on. "0.0.0.0" means listen on all available interfaces.
-UDP_IP = "127.0.0.1"
-UDP_PORT = 5005
+UDP_IP = "0.0.0.0"
+UDP_PORT = 5004
 BUFFER_SIZE = 1024  # Max size of the received message
 
 PACKET_FORMAT = "!LhhhhhhBBBBBBBBBB"
 PACKET_SIZE = struct.calcsize(PACKET_FORMAT)
 
-TIMEOUT_SEC = 1.0  # For example
+TIMEOUT_SEC = 3.0  # For example
 
 def check_root_permissions():
     """Exits the script if it's not run as root."""

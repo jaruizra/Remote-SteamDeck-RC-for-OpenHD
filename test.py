@@ -22,7 +22,7 @@ except ImportError:
     sys.exit(1)
 
 # --- Configuration ---
-VIRTUAL_JOYSTICK_INDEX = 1
+VIRTUAL_JOYSTICK_INDEX = 0
 REFRESH_RATE_HZ = 60
 REFRESH_DELAY_SEC = 1 / REFRESH_RATE_HZ
 
