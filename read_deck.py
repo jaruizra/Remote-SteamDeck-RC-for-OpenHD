@@ -54,7 +54,7 @@ def init_udp_socket():
 
 def gather_controller_data(joystick):
     """
-    Gathers the 18 specific channels from the joystick object
+    Gathers the 16 specific channels from the joystick object
 
     Args:
         joystick (Joystick): The initialized joystick object
@@ -78,7 +78,7 @@ def gather_controller_data(joystick):
         shoulder_state.get("R2", 0)
     ]
 
-    # Collect the 11 most important digital buttons
+    # Collect the 10 most important digital buttons
     buttons = [
         face_buttons.get("A", 0),
         face_buttons.get("B", 0),

@@ -112,7 +112,7 @@ def main():
                     
                     # Update the last known state
                     last_axes = list(unpacked_data[1:7])
-                    last_buttons = list(unpacked_data[7:17])
+                    last_buttons = list(unpacked_data[7:18])
             
             except socket.timeout:
                 pass
@@ -136,15 +136,15 @@ def main():
             
             device.emit(uinput.BTN_SOUTH, buttons_to_send[0], syn=False)
             device.emit(uinput.BTN_EAST,  buttons_to_send[1], syn=False)
-            device.emit(uinput.BTN_NORTH, buttons_to_send[2], syn=False)
-            device.emit(uinput.BTN_WEST,  buttons_to_send[3], syn=False)
+            device.emit(uinput.BTN_WEST, buttons_to_send[2], syn=False)
+            device.emit(uinput.BTN_NORTH,  buttons_to_send[3], syn=False)
             device.emit(uinput.BTN_TL,    buttons_to_send[4], syn=False)
             device.emit(uinput.BTN_TR,    buttons_to_send[5], syn=False)
-
-            hat_y = buttons_to_send[7] - buttons_to_send[6]
+            
+            hat_y = buttons_to_send[6] - buttons_to_send[7]
             hat_x = buttons_to_send[9] - buttons_to_send[8]
-            device.emit(uinput.ABS_HAT0Y, hat_y, syn=False)
-            device.emit(uinput.ABS_HAT0X, hat_x, syn=False)
+            device.emit(uinput.BTN_DY, hat_y, syn=False)
+            device.emit(uinput.BTN_DX, hat_x, syn=False)
 
             device.syn()
 
