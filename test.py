@@ -17,8 +17,8 @@ from rich.panel import Panel
 try:
     from steamdeck_input_api import Joystick
 except ImportError:
-    print("Error: Could not import the Joystick class.", file=sys.stderr)
-    print("Please ensure 'steamdeck_input_api.py' is in the same directory.", file=sys.stderr)
+    print("Error: Could not import the Joystick class.")
+    print("Please ensure 'steamdeck_input_api.py' is in the same directory.")
     sys.exit(1)
 
 # --- Configuration ---
@@ -104,14 +104,19 @@ def main():
         
         print("\nConnection successful! Displaying dashboard...")
         
+        print(joystick.axis_values)  # <-- Suggested change: Print the axis values for debugging
+        
         with Live(generate_dashboard_layout(joystick), screen=True, vertical_overflow="visible") as live:
             while joystick.update():
                 live.update(generate_dashboard_layout(joystick))
                 time.sleep(REFRESH_DELAY_SEC)
 
-    except (RuntimeError, KeyboardInterrupt) as e:
-        print(f"\nERROR: Could not connect or run dashboard. {e}", file=sys.stderr)
-        print("Is the receiver script running with 'sudo'?", file=sys.stderr)
+    except (RuntimeError) as e:
+        print(f"\nERROR: Could not connect or run dashboard. {e}")
+        print("Is the receiver script running with 'sudo'?")
+
+    except (KeyboardInterrupt) as e:
+        print("Program ended by user")
     finally:
         if joystick:
             joystick.close()
