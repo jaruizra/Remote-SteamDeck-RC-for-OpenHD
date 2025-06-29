@@ -1,21 +1,40 @@
-# WiFiJoystickBridge
+# OpenHD RC - WiFi Joystick Bridge
 
-WiFiJoystickBridge is a Python-based system that transmits joystick input over WiFi, allowing one Linux PC to control another by emulating a virtual joystick. This project leverages SDL2 (via PySDL2) for capturing joystick events and uses UDP sockets for real-time, low-latency communication.
+OpenHD RC is a Python-based system that reads joystick inputs, specifically from a Steam Deck, and transmits them over a WiFi network to be used as a remote control for OpenHD. This allows for a highly responsive, low-latency control solution using custom hardware.
 
-## Overview
+The system uses SDL2 (via the `pysdl2` library) to capture high-resolution joystick data and transmits it efficiently using a custom binary format over UDP. The receiver script then creates a virtual joystick on the remote machine, which can be directly read by QOpenHD.
 
-The goal of WiFiJoystickBridge is to overcome the limitations of several joystick libraries by providing a real-time solution for remote control. After testing multiple libraries, SDL2 with PySDL2 was chosen for its reliability and low-level control capabilities.
+## Key Features
 
-> **Note:** Currently, the system requires administrative privileges. Run the application using `sudo` or update your Udev rules to grant non-root access to the joystick device.
+- **17-Channel RC Transmitter**: Captures and transmits 17 distinct channels, covering all axes, buttons, and triggers of the Steam Deck, making it fully compatible with OpenHD's RC system.
+- **Low-Latency UDP Transmission**: Utilizes a custom-packed binary struct for minimal data overhead and real-time performance, ideal for remote control applications.
+- **Virtual Joystick Emulation**: The receiver script creates a virtual `uinput` device, allowing any Linux-based system (including a Raspberry Pi running OpenHD) to recognize the transmitted data as a standard joystick.
+- **Designed for Steam Deck**: The input mapping is specifically tailored for the Steam Deck, but the modular code allows for easy adaptation to other controllers.
+- **Fail-Safe Mechanism**: Includes a timeout feature that centers the primary flight controls if the connection is lost, preventing flyaways.
 
-## Features
+## System Architecture
 
-- **Real-Time Data Transmission:**  
-  Capture and send the state of four axes and four buttons over WiFi using UDP.
-- **Virtual Joystick Emulation:**  
-  Send joystick inputs from one Linux PC to another by emulating a virtual joystick.
-- **Modular and Extensible:**  
-  The project is designed to be easily improved and it has mapping of Steam Deck controls
+The project is composed of two main components:
+
+- **Transmitter (`read_deck.py`)**:
+    - Runs on the device with the physical joystick (e.g., a Steam Deck).
+    - Uses the `steamdeck_input_api.py` module to read all joystick inputs via `pysdl2`.
+    - Gathers data from 17 specific channels.
+    - Packs the data into a compact binary format using a custom `struct`.
+    - Transmits the data to a specified IP address and port over UDP.
+
+- **Receiver (`joystick_receiver.py`)**:
+    - Runs on the remote machine (e.g., a Raspberry Pi with OpenHD).
+    - Listens for incoming UDP packets on the specified port.
+    - Unpacks the binary data to reconstruct the joystick state.
+    - Creates a virtual joystick using the `python-uinput` library.
+    - Emits joystick events that can be read by any application, such as QOpenHD.
+
+## Communication Protocol
+
+- **Transport**: UDP
+- **Port**: `5005` (configurable)
+- **Payload**: A custom binary struct designed for efficiency.
 
 ## Tested Libraries
 
@@ -32,60 +51,34 @@ During development, several libraries were evaluated:
 **Final Solution:**  
 The final implementation uses SDL2 (via PySDL2) to capture joystick inputs, combined with UDP sockets for transmitting data.
 
-## Communication Method
+## Communication Protocol
 
-- **UDP Sockets:**  
-  The system packages joystick state (axes and buttons) in JSON format and transmits it over UDP. This method ensures low latency and simplicity.
+- **Transport**: UDP
+- **Port**: `5005` (configurable)
+- **Payload**: A custom binary struct designed for efficiency.
 
-## Installation
+The data is packed in the following format:
+- **Format String**: `!LhhhhhhBBBBBBBBBB`
+- **Contents**:
+    - `L`: Sequence Number (Unsigned Long)
+    - `h` (x6): Six 16-bit signed integers for the analog axes (LX, LY, RX, RY, L2, R2).
+    - `B` (x10): Ten 8-bit unsigned integers for the digital buttons (A, B, X, Y, L1, R1, D-Pad Up/Down/Left/Right).
 
-1. **Dependencies:**  
-   Make sure you have Python 3 installed. Install the required Python libraries:
-   ```bash
-   pip install pysdl2
-   (Install any additional dependencies as needed.)
-   ```
+## Installation and Usage
 
-2. **Running the Application:**  
-    To run the transmitter or receiver, execute the corresponding script.  
-    Run with administrative privileges (`sudo`) or configure Udev rules for joystick access.
+### Prerequisites
 
-## Project Structure
-
-- **Transmitter:**  
-  Captures joystick events using SDL2, packages the data as JSON, and sends it via UDP.
-- **Receiver:**  
-  Listens for UDP messages, decodes the JSON data, and processes the joystick state.
-
-## TODO List
-
-- **Input Mapping:**  
-  Map all Steam Deck inputs using SDL2.
-- **Data Organization:**  
-  Structure input data into dictionaries grouping related buttons together.
-- **Code Modularization:**  
-  Refactor code into classes for better integration with other systems.
-
-**Optional Enhancements:**
-- **ZeroMQ Integration:**  
-  Considering migrating to ZeroMQ to take advantage of its pub/sub model for scalable messaging.
-
-## Contributing
-Contributions are welcome! Fork the repository and submit pull requests with detailed descriptions of your changes.
-
-Or suggest improvements in the issues tab
-
-
-
-
-# Notes for Raspbery pi on OpenHD Image
+- Two Linux-based machines (e.g., a Steam Deck and a Raspberry Pi).
+- Python 3 and `pip` installed on both machines.
+- A network connection (WiFi or Ethernet) between the two devices.
 
 ## 1. Install Required Packages
 
 Install Git and Python Pip:
 
 ```bash
-sudo apt install git python3-pip
+sudo apt update
+sudo apt install git python3-pip -y
 ```
 
 ## 2. Clone the Project Repository
@@ -99,12 +92,12 @@ cd <repository-directory>
 
 ## 3. Install Python Dependencies
 
-Install the python-uinput package:
+Install the dependencies package:
 
 ```bash
-sudo pip3 install python-uinput
+sudo pip install -r requirements.txt
 ```
-
+ 
 ## 4. Verify uinput Module Availability
 
 Check if the uinput module is loaded:
@@ -131,8 +124,28 @@ lsmod | grep uinput
 
 ## 6. Run the Program
 
-Finally, execute thr program:
+Finally, execute the program on the steam deck:
 
 ```bash
-sudo ./program.py
+sudo ./read_deck.py
 ```
+
+Then, execute the program where the OpenHD Ground is located:
+
+```bash
+sudo ./joystick_receiver.py
+```
+
+### 6.1 Optional
+
+If you want to test if its working. Run on the device where OpenHD Ground is located the following script:
+
+```bash
+sudo ./test.py
+```
+
+## Contributing
+
+Contributions are welcome! Fork the repository and submit pull requests with detailed descriptions of your changes.
+
+Or suggest improvements in the issues tab
