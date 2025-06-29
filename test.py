@@ -114,8 +114,8 @@ def main():
 
         # --- NEW: discover where the kernel put the hat -----------------
         import uinput                       # need the ABS_HAT0* constants
-        hat_x_idx = joystick.code_to_axis[uinput.ABS_HAT0X]
-        hat_y_idx = joystick.code_to_axis[uinput.ABS_HAT0Y]
+        hat_x_idx = joystick.axis_codes.index(uinput.ABS_HAT0X)
+        hat_y_idx = joystick.axis_codes.index(uinput.ABS_HAT0Y)
 
 
         print("\nConnection successful! Displaying dashboard...")
