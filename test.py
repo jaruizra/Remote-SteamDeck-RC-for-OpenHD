@@ -14,8 +14,6 @@ from rich.table import Table
 from rich.columns import Columns
 from rich.panel import Panel
 
-# --- Import the Joystick class from your API file ---
-# This demonstrates the reusability of your class.
 try:
     from steamdeck_input_api import Joystick
 except ImportError:
@@ -24,17 +22,14 @@ except ImportError:
     sys.exit(1)
 
 # --- Configuration ---
-# We want to connect to the VIRTUAL joystick. This is usually the second
-# joystick on the system (index 1) if the physical one is index 0.
-# You may need to change this if you have other controllers connected.
 VIRTUAL_JOYSTICK_INDEX = 1
 REFRESH_RATE_HZ = 60
 REFRESH_DELAY_SEC = 1 / REFRESH_RATE_HZ
 
 def generate_dashboard_layout(joystick):
     """
-    Generates a rich layout object by accessing the joystick's properties.
-    This version is adapted to read the layout of the VIRTUAL joystick.
+    Generates a rich layout object by interpreting the layout of the
+    VIRTUAL joystick created by joystick_receiver.py.
     """
     def create_table(data_dict, title):
         table = Table(title=title, expand=True, show_header=False, border_style="dim")
@@ -51,6 +46,31 @@ def generate_dashboard_layout(joystick):
 
     # --- Manually create dictionaries to match the VIRTUAL joystick layout ---
 
+    # Joysticks (LX, LY, RX, RY)
+    virtual_joystick_state = {
+        "LX": joystick.axis_values.get(0, 0),
+        "LY": joystick.axis_values.get(1, 0),
+        "RX": joystick.axis_values.get(2, 0),
+        "RY": joystick.axis_values.get(3, 0),
+    }
+
+    # Face Buttons (A, B, X, Y)
+    # Note: The receiver maps X->BTN_WEST(3), Y->BTN_NORTH(2). We read accordingly.
+    virtual_face_buttons = {
+        "A (South)": joystick.button_values.get(0, 0),
+        "B (East)":  joystick.button_values.get(1, 0),
+        "X (West)":  joystick.button_values.get(3, 0),
+        "Y (North)": joystick.button_values.get(2, 0),
+    }
+
+    # Shoulder Buttons (L1/R1) and Triggers (L2/R2)
+    virtual_shoulder_state = {
+        "L1 (TL)": joystick.button_values.get(4, 0),
+        "R1 (TR)": joystick.button_values.get(5, 0),
+        "L2 (Z)":  joystick.axis_values.get(4, 0),
+        "R2 (RZ)": joystick.axis_values.get(5, 0),
+    }
+
     # The virtual D-Pad is a HAT switch, which SDL reads as axes (6 and 7).
     hat_x = joystick.axis_values.get(6, 0)
     hat_y = joystick.axis_values.get(7, 0)
@@ -61,19 +81,9 @@ def generate_dashboard_layout(joystick):
         "Right": 1 if hat_x > 0 else 0,
     }
 
-    # The virtual shoulder buttons (L1/R1) map to different button indices.
-    virtual_shoulder_state = {
-        "L1": joystick.button_values.get(4, 0),
-        "R1": joystick.button_values.get(5, 0),
-        "L2": joystick.axis_values.get(4, 0),
-        "R2": joystick.axis_values.get(5, 0),
-    }
-
-    # Use the original properties for things that don't change.
-    face_button_panel = create_table(joystick.face_buttons, "Face Buttons")
-    joystick_panel = create_table(joystick.joystick_state, "Joysticks")
-    
-    # Use our new, manually created dictionaries for the panels.
+    # --- Create panels using our new dictionaries ---
+    joystick_panel = create_table(virtual_joystick_state, "Joysticks")
+    face_button_panel = create_table(virtual_face_buttons, "Face Buttons")
     dpad_panel = create_table(virtual_dpad_state, "D-Pad")
     shoulder_panel = create_table(virtual_shoulder_state, "Shoulders")
     
@@ -88,13 +98,11 @@ def main():
     print(f"Make sure the receiver is running and the virtual joystick is at index {VIRTUAL_JOYSTICK_INDEX}.")
 
     try:
-        # Create an instance of the Joystick class, telling it to open the VIRTUAL joystick.
-        joystick = Joystick(index=VIRTUAL_JOYSTICK_INDEX)
+        joystick = Joystick(index=VIRTUAL_JOYSTICK_INDEX, num_axes=8, num_buttons=10)
         
         print("\nConnection successful! Displaying dashboard...")
         
         with Live(generate_dashboard_layout(joystick), screen=True, vertical_overflow="visible") as live:
-            # The loop will exit when joystick.update() returns False (on a quit event)
             while joystick.update():
                 live.update(generate_dashboard_layout(joystick))
                 time.sleep(REFRESH_DELAY_SEC)
