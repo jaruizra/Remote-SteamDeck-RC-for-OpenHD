@@ -143,8 +143,8 @@ def main():
             
             hat_y = buttons_to_send[6] - buttons_to_send[7]
             hat_x = buttons_to_send[9] - buttons_to_send[8]
-            device.emit(uinput.BTN_DY, hat_y, syn=False)
-            device.emit(uinput.BTN_DX, hat_x, syn=False)
+            device.emit(uinput.ABS_HAT0Y, hat_y, syn=False)
+            device.emit(uinput.ABS_HAT0X, hat_x, syn=False)
 
             device.syn()
 
