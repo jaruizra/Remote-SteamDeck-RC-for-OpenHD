@@ -50,7 +50,7 @@ def generate_dashboard_layout(joystick):
     virtual_joystick_state = {
         "LX": joystick.axis_values.get(0, 0),
         "LY": joystick.axis_values.get(1, 0),
-        "RX": joystick.axis_values.get(2, 0),
+        "RX": joystick.axis_values.get(4, 0), # Swapped: RX is on axis 4
         "RY": joystick.axis_values.get(3, 0),
     }
 
@@ -67,7 +67,7 @@ def generate_dashboard_layout(joystick):
     virtual_shoulder_state = {
         "L1 (TL)": joystick.button_values.get(4, 0),
         "R1 (TR)": joystick.button_values.get(5, 0),
-        "L2 (Z)":  joystick.axis_values.get(4, 0),
+        "L2 (Z)":  joystick.axis_values.get(2, 0), # Swapped: L2 is on axis 2
         "R2 (RZ)": joystick.axis_values.get(5, 0),
     }
 
