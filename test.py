@@ -26,7 +26,7 @@ VIRTUAL_JOYSTICK_INDEX = 1
 REFRESH_RATE_HZ = 60
 REFRESH_DELAY_SEC = 1 / REFRESH_RATE_HZ
 
-def generate_dashboard_layout(joystick):
+def generate_dashboard_layout(joystick, hat_x_idx, hat_y_idx):
     """
     Generates a rich layout object by interpreting the layout of the
     VIRTUAL joystick created by joystick_receiver.py.
@@ -74,8 +74,8 @@ def generate_dashboard_layout(joystick):
     }
 
     # The virtual D-Pad is a HAT switch, which SDL reads as axes (6 and 7).
-    hat_x = joystick.axis_values.get(6, 0)
-    hat_y = joystick.axis_values.get(7, 0)
+    hat_x = joystick.axis_values.get(hat_x_idx, 0)
+    hat_y = joystick.axis_values.get(hat_y_idx, 0)
     virtual_dpad_state = {
         "Up": 1 if hat_y < 0 else 0,
         "Down": 1 if hat_y > 0 else 0,
@@ -111,12 +111,18 @@ def main():
     try:
         joystick = Joystick(index=VIRTUAL_JOYSTICK_INDEX, num_axes=8, num_buttons=10)
         
+
+        # --- NEW: discover where the kernel put the hat -----------------
+        import uinput                       # need the ABS_HAT0* constants
+        hat_x_idx = joystick.code_to_axis[uinput.ABS_HAT0X]
+        hat_y_idx = joystick.code_to_axis[uinput.ABS_HAT0Y]
+
+
         print("\nConnection successful! Displaying dashboard...")
         
-        with Live(generate_dashboard_layout(joystick), screen=True, vertical_overflow="visible") as live:
+        with Live(generate_dashboard_layout(joystick, hat_x_idx, hat_y_idx), screen=True, vertical_overflow="visible") as live:
             while joystick.update():
-                print(joystick.axis_values, file=sys.stderr)
-                live.update(generate_dashboard_layout(joystick))
+                live.update(generate_dashboard_layout(joystick, hat_x_idx, hat_y_idx))
                 time.sleep(REFRESH_DELAY_SEC)
 
     except (RuntimeError) as e:
