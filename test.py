@@ -104,10 +104,9 @@ def main():
         
         print("\nConnection successful! Displaying dashboard...")
         
-        print(joystick.axis_values)  # <-- Suggested change: Print the axis values for debugging
-        
         with Live(generate_dashboard_layout(joystick), screen=True, vertical_overflow="visible") as live:
             while joystick.update():
+                print(joystick.axis_values)  # <-- Move this line here for live updates
                 live.update(generate_dashboard_layout(joystick))
                 time.sleep(REFRESH_DELAY_SEC)
 
