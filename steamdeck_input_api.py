@@ -161,8 +161,8 @@ class Joystick:
         shoulder_dict = {
             "L1": self.button_values.get(9, 0),
             "R1": self.button_values.get(10, 0),
-            "L2 Axis": self.axis_values.get(4, 0),
-            "R2 Axis": self.axis_values.get(5, 0),
+            "L2": self.axis_values.get(4, 0),
+            "R2": self.axis_values.get(5, 0),
         }
         return shoulder_dict
 
