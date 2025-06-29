@@ -34,8 +34,7 @@ REFRESH_DELAY_SEC = 1 / REFRESH_RATE_HZ
 def generate_dashboard_layout(joystick):
     """
     Generates a rich layout object by accessing the joystick's properties.
-    This function is identical to the one in the API script, showing how
-    reusable components can be.
+    This version is adapted to read the layout of the VIRTUAL joystick.
     """
     def create_table(data_dict, title):
         table = Table(title=title, expand=True, show_header=False, border_style="dim")
@@ -50,13 +49,33 @@ def generate_dashboard_layout(joystick):
                 table.add_row(item, f"[{color}]{value:+6d}[/]")
         return Panel(table, title=f"[bold cyan]{title}[/]", border_style="cyan")
 
-    # --- Use the properties from the joystick object to create each panel ---
+    # --- Manually create dictionaries to match the VIRTUAL joystick layout ---
+
+    # The virtual D-Pad is a HAT switch, which SDL reads as axes (6 and 7).
+    hat_x = joystick.axis_values.get(6, 0)
+    hat_y = joystick.axis_values.get(7, 0)
+    virtual_dpad_state = {
+        "Up": 1 if hat_y < 0 else 0,
+        "Down": 1 if hat_y > 0 else 0,
+        "Left": 1 if hat_x < 0 else 0,
+        "Right": 1 if hat_x > 0 else 0,
+    }
+
+    # The virtual shoulder buttons (L1/R1) map to different button indices.
+    virtual_shoulder_state = {
+        "L1": joystick.button_values.get(4, 0),
+        "R1": joystick.button_values.get(5, 0),
+        "L2": joystick.axis_values.get(4, 0),
+        "R2": joystick.axis_values.get(5, 0),
+    }
+
+    # Use the original properties for things that don't change.
     face_button_panel = create_table(joystick.face_buttons, "Face Buttons")
-    dpad_panel = create_table(joystick.dpad_state, "D-Pad")
-    shoulder_panel = create_table(joystick.shoulder_state, "Shoulders")
     joystick_panel = create_table(joystick.joystick_state, "Joysticks")
-    # Note: The simple receiver doesn't create back buttons, so we omit this.
-    # back_button_panel = create_table(joystick.back_buttons, "Back Grips")
+    
+    # Use our new, manually created dictionaries for the panels.
+    dpad_panel = create_table(virtual_dpad_state, "D-Pad")
+    shoulder_panel = create_table(virtual_shoulder_state, "Shoulders")
     
     left_column = Columns([face_button_panel, dpad_panel])
     
