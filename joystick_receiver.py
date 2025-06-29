@@ -66,6 +66,11 @@ def create_virtual_joystick():
         # Face Buttons & Shoulder Buttons
         uinput.BTN_SOUTH, uinput.BTN_EAST, uinput.BTN_NORTH, uinput.BTN_WEST,
         uinput.BTN_TL, uinput.BTN_TR,
+        # D-Pad as buttons
+        uinput.BTN_DPAD_UP,
+        uinput.BTN_DPAD_DOWN,
+        uinput.BTN_DPAD_LEFT,
+        uinput.BTN_DPAD_RIGHT,
         # Axes
         uinput.ABS_X + (-32767, 32767, 0, 0),
         uinput.ABS_Y + (-32767, 32767, 0, 0),
@@ -146,6 +151,12 @@ def main():
             hat_x = buttons_to_send[9] - buttons_to_send[8]
             device.emit(uinput.ABS_HAT0Y, hat_y, syn=False)
             device.emit(uinput.ABS_HAT0X, hat_x, syn=False)
+
+            // In your main loop, after emitting the hat axes:
+            device.emit(uinput.BTN_DPAD_UP,    buttons_to_send[6], syn=False)
+            device.emit(uinput.BTN_DPAD_DOWN,  buttons_to_send[7], syn=False)
+            device.emit(uinput.BTN_DPAD_LEFT,  buttons_to_send[8], syn=False)
+            device.emit(uinput.BTN_DPAD_RIGHT, buttons_to_send[9], syn=False)
 
             device.syn()
 
