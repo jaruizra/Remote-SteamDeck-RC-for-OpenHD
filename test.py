@@ -83,13 +83,22 @@ def generate_dashboard_layout(joystick):
         "Right": 1 if hat_x > 0 else 0,
     }
 
+    # d-pad Buttons (A, B, X, Y)
+    d_buttons = {
+        "Up": joystick.button_values.get(6, 0),
+        "Down": joystick.button_values.get(7, 0),
+        "Left": joystick.button_values.get(8, 0),
+        "Right": joystick.button_values.get(9, 0),
+    }
+
     # --- Create panels using our new dictionaries ---
     joystick_panel = create_table(virtual_joystick_state, "Joysticks")
     face_button_panel = create_table(virtual_face_buttons, "Face Buttons")
     dpad_panel = create_table(virtual_dpad_state, "D-Pad")
+    d_buttons_panel = create_table(d_buttons, "D-Buttons")
     shoulder_panel = create_table(virtual_shoulder_state, "Shoulders")
     
-    left_column = Columns([face_button_panel, dpad_panel])
+    left_column = Columns([face_button_panel, dpad_panel, d_buttons_panel])
     
     return Columns([joystick_panel, left_column, shoulder_panel])
 
