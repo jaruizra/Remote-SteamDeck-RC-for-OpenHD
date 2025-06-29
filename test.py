@@ -31,12 +31,6 @@ def generate_dashboard_layout(joystick):
     Generates a rich layout object by interpreting the layout of the
     VIRTUAL joystick created by joystick_receiver.py.
     """
-    def scale_trigger(value):
-        """Scales a joystick axis from -32768..32767 to 100..0 (reversed)."""
-        # Clamp the value to the expected range
-        value = max(-32768, min(value, 32767))
-        # Apply reversed linear scaling
-        return int(((32767 - value) / 65535) * 100)
 
     def create_table(data_dict, title):
         table = Table(title=title, expand=True, show_header=False, border_style="dim")
@@ -47,7 +41,7 @@ def generate_dashboard_layout(joystick):
             if isinstance(value, int) and value in (0, 1):
                 state = "[bold green]Pressed[/]" if value else "[red]Off[/]"
                 table.add_row(item, state)
-            # Standard display for joystick axes
+            # Standard display for joystick axes and triggers
             else:
                 color = "green" if value > 1000 else "red" if value < -1000 else "white"
                 table.add_row(item, f"[{color}]{value:+6d}[/]")
@@ -71,12 +65,12 @@ def generate_dashboard_layout(joystick):
         "Y (North)": joystick.button_values.get(2, 0),
     }
 
-    # Shoulder Buttons (L1/R1) and Triggers (L2/R2) with scaling
+    # Shoulder Buttons (L1/R1) and Triggers (L2/R2) now show raw axis values
     virtual_shoulder_state = {
         "L1 (TL)": joystick.button_values.get(4, 0),
         "R1 (TR)": joystick.button_values.get(5, 0),
-        "L2 (Z)":  scale_trigger(joystick.axis_values.get(2, 0)),
-        "R2 (RZ)": scale_trigger(joystick.axis_values.get(5, 0)),
+        "L2 (Z)":  joystick.axis_values.get(2, 0),
+        "R2 (RZ)": joystick.axis_values.get(5, 0),
     }
 
     # The virtual D-Pad is a HAT switch, which SDL reads as axes (6 and 7).
