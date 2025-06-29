@@ -152,7 +152,7 @@ def main():
             device.emit(uinput.ABS_HAT0Y, hat_y, syn=False)
             device.emit(uinput.ABS_HAT0X, hat_x, syn=False)
 
-            // In your main loop, after emitting the hat axes:
+            # In your main loop, after emitting the hat axes:
             device.emit(uinput.BTN_DPAD_UP,    buttons_to_send[6], syn=False)
             device.emit(uinput.BTN_DPAD_DOWN,  buttons_to_send[7], syn=False)
             device.emit(uinput.BTN_DPAD_LEFT,  buttons_to_send[8], syn=False)
