@@ -31,31 +31,42 @@ def generate_dashboard_layout(joystick):
     Generates a rich layout object by interpreting the layout of the
     VIRTUAL joystick created by joystick_receiver.py.
     """
+    def scale_trigger(value):
+        """Scales a joystick axis from -32768..32767 to 0..100."""
+        # Clamp the value to the expected range
+        value = max(-32768, min(value, 32767))
+        # Apply linear scaling
+        return int(((value + 32768) / 65535) * 100)
+
     def create_table(data_dict, title):
         table = Table(title=title, expand=True, show_header=False, border_style="dim")
         table.add_column("Item", style="cyan", no_wrap=True)
         table.add_column("Value", justify="right")
         for item, value in data_dict.items():
-            if isinstance(value, int) and value in (0, 1):
+            # Special display for scaled triggers
+            if "L2" in item or "R2" in item:
+                table.add_row(item, f"[yellow]{value:3d}%[/]")
+            # Standard display for buttons
+            elif isinstance(value, int) and value in (0, 1):
                 state = "[bold green]Pressed[/]" if value else "[red]Off[/]"
                 table.add_row(item, state)
+            # Standard display for joystick axes
             else:
                 color = "green" if value > 1000 else "red" if value < -1000 else "white"
                 table.add_row(item, f"[{color}]{value:+6d}[/]")
         return Panel(table, title=f"[bold cyan]{title}[/]", border_style="cyan")
 
-    # --- Manually create dictionaries to match the VIRTUAL joystick layout ---
+    # --- Manually create dictionaries with transformations ---
 
-    # Joysticks (LX, LY, RX, RY)
+    # Joysticks (LX, LY, RX, RY) with inversions
     virtual_joystick_state = {
         "LX": joystick.axis_values.get(0, 0),
-        "LY": joystick.axis_values.get(1, 0),
-        "RX": joystick.axis_values.get(4, 0), # Swapped: RX is on axis 4
+        "LY": -joystick.axis_values.get(1, 0),  # Invert LY
+        "RX": -joystick.axis_values.get(4, 0),  # Invert RX
         "RY": joystick.axis_values.get(3, 0),
     }
 
     # Face Buttons (A, B, X, Y)
-    # Note: The receiver maps X->BTN_WEST(3), Y->BTN_NORTH(2). We read accordingly.
     virtual_face_buttons = {
         "A (South)": joystick.button_values.get(0, 0),
         "B (East)":  joystick.button_values.get(1, 0),
@@ -63,12 +74,12 @@ def generate_dashboard_layout(joystick):
         "Y (North)": joystick.button_values.get(2, 0),
     }
 
-    # Shoulder Buttons (L1/R1) and Triggers (L2/R2)
+    # Shoulder Buttons (L1/R1) and Triggers (L2/R2) with scaling
     virtual_shoulder_state = {
         "L1 (TL)": joystick.button_values.get(4, 0),
         "R1 (TR)": joystick.button_values.get(5, 0),
-        "L2 (Z)":  joystick.axis_values.get(2, 0), # Swapped: L2 is on axis 2
-        "R2 (RZ)": joystick.axis_values.get(5, 0),
+        "L2 (Z)":  scale_trigger(joystick.axis_values.get(2, 0)),
+        "R2 (RZ)": scale_trigger(joystick.axis_values.get(5, 0)),
     }
 
     # The virtual D-Pad is a HAT switch, which SDL reads as axes (6 and 7).
