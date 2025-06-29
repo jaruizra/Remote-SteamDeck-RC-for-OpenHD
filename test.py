@@ -44,7 +44,7 @@ def generate_dashboard_layout(joystick):
         table.add_column("Value", justify="right")
         for item, value in data_dict.items():
             # Standard display for buttons
-            elif isinstance(value, int) and value in (0, 1):
+            if isinstance(value, int) and value in (0, 1):
                 state = "[bold green]Pressed[/]" if value else "[red]Off[/]"
                 table.add_row(item, state)
             # Standard display for joystick axes
