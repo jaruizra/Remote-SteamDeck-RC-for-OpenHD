@@ -33,7 +33,7 @@ def check_root_permissions():
 # --- Network Configuration ---
 # The destination IP address for the UDP packets.
 # Change this to the IP address of the receiving computer.UDP_IP = "100.121.21.44"
-UDP_IP = "192.168.3.1"
+UDP_IP = "127.0.0.1"
 UDP_PORT = 5005
 
 # --- Performance Configuration ---
