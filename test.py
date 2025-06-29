@@ -23,7 +23,7 @@ except ImportError:
 
 # --- Configuration ---
 VIRTUAL_JOYSTICK_INDEX = 0
-REFRESH_RATE_HZ = 60
+REFRESH_RATE_HZ = 100
 REFRESH_DELAY_SEC = 1 / REFRESH_RATE_HZ
 
 def generate_dashboard_layout(joystick):

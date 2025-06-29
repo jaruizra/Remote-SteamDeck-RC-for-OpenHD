@@ -34,7 +34,7 @@ def check_root_permissions():
 # The destination IP address for the UDP packets.
 # Change this to the IP address of the receiving computer.UDP_IP = "100.121.21.44"
 UDP_IP = "127.0.0.1"
-UDP_PORT = 5005
+UDP_PORT = 5004
 
 # --- Performance Configuration ---
 TRANSMIT_RATE_HZ = 100  # Increased rate for lower latency

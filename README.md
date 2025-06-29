@@ -97,18 +97,8 @@ Install the dependencies package:
 ```bash
 sudo pip install -r requirements.txt
 ```
- 
-## 4. Verify uinput Module Availability
 
-Check if the uinput module is loaded:
-
-```bash
-lsmod | grep uinput
-```
-
-- If you see no output: The module is not loaded; proceed to the next step.
-
-## 5. Load the uinput Module Manually
+## 4. Load the uinput Module Manually
 
 Enable the module manually:
 
@@ -116,24 +106,18 @@ Enable the module manually:
 sudo modprobe uinput
 ```
 
-Then, verify again:
-
-lsmod | grep uinput
-
-- If there is still no output: Additional steps may be required (e.g., verifying your kernel configuration or setting up udev rules).
-
-## 6. Run the Program
+## 5. Run the Program
 
 Finally, execute the program on the steam deck:
 
 ```bash
-sudo ./read_deck.py
+sudo python3 ./read_deck.py
 ```
 
 Then, execute the program where the OpenHD Ground is located:
 
 ```bash
-sudo ./joystick_receiver.py
+sudo python3 ./joystick_receiver.py
 ```
 
 ### 6.1 Optional
@@ -141,7 +125,7 @@ sudo ./joystick_receiver.py
 If you want to test if its working. Run on the device where OpenHD Ground is located the following script:
 
 ```bash
-sudo ./test.py
+sudo python3 ./test.py
 ```
 
 ## Contributing
